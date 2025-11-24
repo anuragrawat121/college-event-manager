@@ -3,19 +3,25 @@ import { Home, Calendar, FileText, Ticket, Bell, BarChart3, MessageSquare, Setti
 
 export default function Sidebar({ activeScreen, onNavigate, userRole }) {
     const navItems = [
+        // 1. Main Overview
         { id: 'dashboard', label: 'Dashboard', icon: Home, roles: ['admin', 'organizer', 'student'] },
+        { id: 'calendar', label: 'Calendar', icon: Calendar, roles: ['admin', 'organizer', 'student'] },
+
+        // 2. Management Modules
         { id: 'events', label: 'Events', icon: Calendar, roles: ['admin', 'organizer'] },
-
-        // *** THIS IS THE NEW BUTTON ***
         { id: 'users', label: 'Manage Users', icon: Users, roles: ['admin'] },
-
         { id: 'registrations', label: 'Registrations', icon: FileText, roles: ['admin', 'organizer'] },
         { id: 'attendance', label: 'Attendance', icon: Ticket, roles: ['admin', 'organizer'] },
+
+        // 3. Communication & Analytics
         { id: 'notifications', label: 'Notifications', icon: Bell, roles: ['admin', 'organizer', 'student'] },
         { id: 'reports', label: 'Reports', icon: BarChart3, roles: ['admin', 'organizer'] },
         { id: 'feedback', label: 'Feedback', icon: MessageSquare, roles: ['admin', 'organizer', 'student'] },
+
+        // 4. System
         { id: 'settings', label: 'Settings', icon: Settings, roles: ['admin', 'organizer', 'student'] },
     ];
+
     const filteredNavItems = navItems.filter(item => item.roles.includes(userRole));
 
     return (
@@ -24,7 +30,7 @@ export default function Sidebar({ activeScreen, onNavigate, userRole }) {
                 <h1 className="text-white text-xl font-bold tracking-wide">College Events</h1>
             </div>
 
-            <nav className="flex-1 px-3 space-y-1">
+            <nav className="flex-1 px-3 space-y-1 overflow-y-auto">
                 {filteredNavItems.map((item) => {
                     const Icon = item.icon;
                     const isActive = activeScreen === item.id;

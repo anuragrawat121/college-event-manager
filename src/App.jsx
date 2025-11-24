@@ -1,18 +1,20 @@
 import { useState } from 'react';
 // Pages & Components
-import Login from './pages/login'; // Ensure Capital 'L' if filename is Login.jsx
+import Login from './pages/Login';
 import Sidebar from './components/Sidebar';
 import Header from './components/Header';
 import { AdminDashboard } from './components/AdminDashboard';
 import { StudentDashboard } from './components/StudentDashboard';
 import { Attendance } from './components/Attendance';
-import { EventManagement } from './components/Eventmanagement'; // <--- FIXED IMPORT (Capital 'M')
-import { Reports } from './components/Reports'; // Ensure Reports is imported
-import { Feedback } from './components/Feedback'; // Ensure Feedback is imported
-import PlaceholderPage from './pages/PlaceholderPage';
+import { EventManagement } from './components/EventManagement';
+import { Reports } from './components/Reports';
+import { Feedback } from './components/Feedback';
 import { UserManagement } from './components/UserManagement';
 import { Registrations } from './components/Registrations';
 import { Notifications } from './components/Notifications';
+import { Settings } from './components/Settings';
+import { CalendarView } from './components/CalendarView'; // Ensure this import exists
+import PlaceholderPage from './pages/PlaceholderPage';
 
 export default function App() {
   const [isLoggedIn, setIsLoggedIn] = useState(false);
@@ -58,6 +60,15 @@ export default function App() {
           return <StudentDashboard darkMode={darkMode} />;
         case 'feedback':
           return <Feedback darkMode={darkMode} />;
+
+        // *** ADDED CALENDAR HERE FOR STUDENTS ***
+        case 'calendar':
+          return <CalendarView darkMode={darkMode} />;
+
+        case 'notifications':
+          return <Notifications darkMode={darkMode} />;
+        case 'settings':
+          return <Settings darkMode={darkMode} toggleDarkMode={toggleDarkMode} />;
         default:
           return <StudentDashboard darkMode={darkMode} />;
       }
@@ -67,6 +78,11 @@ export default function App() {
     switch (activeScreen) {
       case 'dashboard':
         return <AdminDashboard darkMode={darkMode} />;
+
+      // *** ADDED CALENDAR HERE FOR ADMINS ***
+      case 'calendar':
+        return <CalendarView darkMode={darkMode} />;
+
       case 'events':
         return <EventManagement darkMode={darkMode} />;
       case 'attendance':
@@ -79,10 +95,10 @@ export default function App() {
         return <UserManagement darkMode={darkMode} />;
       case 'registrations':
         return <Registrations darkMode={darkMode} />;
-
       case 'notifications':
         return <Notifications darkMode={darkMode} />;
-
+      case 'settings':
+        return <Settings darkMode={darkMode} toggleDarkMode={toggleDarkMode} />;
       default:
         return <AdminDashboard darkMode={darkMode} />;
     }
@@ -104,6 +120,7 @@ export default function App() {
           darkMode={darkMode}
           onToggleDarkMode={toggleDarkMode}
           onLogout={handleLogout}
+          onNavigate={handleNavigate}
           userName={userName}
           userRole={userRole}
         />
