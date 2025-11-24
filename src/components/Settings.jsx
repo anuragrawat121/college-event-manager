@@ -1,8 +1,20 @@
 import React, { useState } from 'react';
-import { Save, Lock, Bell, Globe, Database, Moon, Sun } from 'lucide-react';
+import { Save, Lock, Bell, Globe, Database, Moon, Sun, ToggleLeft, ToggleRight, Download, Trash2, RefreshCw } from 'lucide-react';
 
 export function Settings({ darkMode, toggleDarkMode }) {
     const [activeTab, setActiveTab] = useState('general');
+
+    // Mock State for Toggles
+    const [notifSettings, setNotifSettings] = useState({
+        email: true,
+        push: true,
+        newsletter: false
+    });
+
+    const handleSave = () => {
+        // Simulate API Call
+        alert("Settings saved successfully!");
+    };
 
     return (
         <div className="space-y-6">
@@ -41,7 +53,7 @@ export function Settings({ darkMode, toggleDarkMode }) {
                 {/* Settings Content */}
                 <div className={`flex-1 rounded-xl border p-6 ${darkMode ? 'bg-[#1E293B] border-gray-700' : 'bg-white border-gray-200'}`}>
 
-                    {/* General Tab */}
+                    {/* 1. General Tab */}
                     {activeTab === 'general' && (
                         <div className="space-y-6">
                             <div>
@@ -70,7 +82,7 @@ export function Settings({ darkMode, toggleDarkMode }) {
 
                             <div>
                                 <h3 className={`text-lg font-bold mb-4 ${darkMode ? 'text-gray-100' : 'text-gray-900'}`}>Appearance</h3>
-                                <div className="flex items-center justify-between p-4 rounded-lg border border-gray-200 dark:border-gray-700">
+                                <div className={`flex items-center justify-between p-4 rounded-lg border ${darkMode ? 'border-gray-700' : 'border-gray-200'}`}>
                                     <div className="flex items-center gap-3">
                                         <div className={`p-2 rounded-full ${darkMode ? 'bg-gray-700 text-white' : 'bg-gray-100 text-gray-600'}`}>
                                             {darkMode ? <Moon size={20} /> : <Sun size={20} />}
@@ -94,7 +106,7 @@ export function Settings({ darkMode, toggleDarkMode }) {
                         </div>
                     )}
 
-                    {/* Security Tab */}
+                    {/* 2. Security Tab */}
                     {activeTab === 'security' && (
                         <div className="space-y-6">
                             <div>
@@ -115,9 +127,86 @@ export function Settings({ darkMode, toggleDarkMode }) {
                         </div>
                     )}
 
-                    {/* Save Button (Common) */}
+                    {/* 3. Notifications Tab (NEW) */}
+                    {activeTab === 'notifications' && (
+                        <div className="space-y-6">
+                            <div>
+                                <h3 className={`text-lg font-bold mb-1 ${darkMode ? 'text-gray-100' : 'text-gray-900'}`}>Alert Preferences</h3>
+                                <p className="text-sm text-gray-500">Choose what you want to be notified about.</p>
+                            </div>
+
+                            <div className="space-y-4">
+                                {[
+                                    { key: 'email', label: 'Email Notifications', desc: 'Receive emails about new event registrations.' },
+                                    { key: 'push', label: 'Push Notifications', desc: 'Receive realtime alerts on your desktop.' },
+                                    { key: 'newsletter', label: 'Monthly Report', desc: 'Receive a monthly analytics summary.' },
+                                ].map((setting) => (
+                                    <div key={setting.key} className={`flex items-center justify-between p-4 rounded-lg border ${darkMode ? 'border-gray-700' : 'border-gray-200'}`}>
+                                        <div>
+                                            <p className={`font-medium ${darkMode ? 'text-gray-200' : 'text-gray-900'}`}>{setting.label}</p>
+                                            <p className="text-sm text-gray-500">{setting.desc}</p>
+                                        </div>
+                                        <button
+                                            onClick={() => setNotifSettings({ ...notifSettings, [setting.key]: !notifSettings[setting.key] })}
+                                            className={`text-blue-600 transition-colors ${notifSettings[setting.key] ? 'text-blue-600' : 'text-gray-300'}`}
+                                        >
+                                            {notifSettings[setting.key] ? <ToggleRight size={40} /> : <ToggleLeft size={40} />}
+                                        </button>
+                                    </div>
+                                ))}
+                            </div>
+                        </div>
+                    )}
+
+                    {/* 4. System Tab (NEW) */}
+                    {activeTab === 'system' && (
+                        <div className="space-y-6">
+                            <div>
+                                <h3 className={`text-lg font-bold mb-1 ${darkMode ? 'text-gray-100' : 'text-gray-900'}`}>System Maintenance</h3>
+                                <p className="text-sm text-gray-500">Manage data backups and system cache.</p>
+                            </div>
+
+                            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                                <div className={`p-4 rounded-xl border ${darkMode ? 'border-gray-700 bg-slate-800/50' : 'border-gray-200 bg-slate-50'}`}>
+                                    <div className="flex items-center gap-3 mb-2">
+                                        <div className="p-2 bg-blue-100 text-blue-600 rounded-lg"><Download size={20} /></div>
+                                        <h4 className={`font-bold ${darkMode ? 'text-gray-200' : 'text-gray-900'}`}>Backup Data</h4>
+                                    </div>
+                                    <p className="text-sm text-gray-500 mb-4">Download a full backup of the database.</p>
+                                    <button className="text-sm font-medium text-blue-600 hover:underline">Download .sql</button>
+                                </div>
+
+                                <div className={`p-4 rounded-xl border ${darkMode ? 'border-gray-700 bg-slate-800/50' : 'border-gray-200 bg-slate-50'}`}>
+                                    <div className="flex items-center gap-3 mb-2">
+                                        <div className="p-2 bg-orange-100 text-orange-600 rounded-lg"><RefreshCw size={20} /></div>
+                                        <h4 className={`font-bold ${darkMode ? 'text-gray-200' : 'text-gray-900'}`}>Clear Cache</h4>
+                                    </div>
+                                    <p className="text-sm text-gray-500 mb-4">Clear temporary files to free up space.</p>
+                                    <button className="text-sm font-medium text-orange-600 hover:underline">Clear Now</button>
+                                </div>
+                            </div>
+
+                            <div className={`p-4 rounded-xl border border-red-200 bg-red-50 dark:bg-red-900/10 dark:border-red-900/50`}>
+                                <div className="flex items-center gap-3 mb-2">
+                                    <Trash2 size={20} className="text-red-600" />
+                                    <h4 className="font-bold text-red-700 dark:text-red-400">Danger Zone</h4>
+                                </div>
+                                <p className="text-sm text-red-600/80 dark:text-red-400/70 mb-4">
+                                    Resetting the system will delete all events and user data permanently.
+                                </p>
+                                <button className="px-4 py-2 bg-red-600 hover:bg-red-700 text-white text-sm font-medium rounded-lg transition-colors">
+                                    Reset System
+                                </button>
+                            </div>
+                        </div>
+                    )}
+
+                    {/* Save Button (Global) */}
                     <div className="mt-8 pt-6 border-t border-gray-100 dark:border-gray-700 flex justify-end">
-                        <button className="flex items-center gap-2 bg-blue-600 hover:bg-blue-700 text-white px-6 py-2.5 rounded-lg font-medium transition-colors">
+                        <button
+                            onClick={handleSave}
+                            className="flex items-center gap-2 bg-blue-600 hover:bg-blue-700 text-white px-6 py-2.5 rounded-lg font-medium transition-colors"
+                        >
                             <Save size={18} />
                             Save Changes
                         </button>

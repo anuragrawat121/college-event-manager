@@ -3,7 +3,7 @@ import { BarChart as RechartsBarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip
 import { Download, TrendingUp, Users, Calendar, ChevronDown } from 'lucide-react';
 
 export function Reports({ darkMode }) {
-  // Mock Data
+  // --- Mock Data ---
   const eventCategoryData = [
     { name: 'Technical', value: 35 },
     { name: 'Cultural', value: 25 },
@@ -31,6 +31,29 @@ export function Reports({ darkMode }) {
 
   const COLORS = ['#3B82F6', '#10B981', '#F59E0B', '#EF4444', '#8B5CF6'];
 
+  // --- Export Logic ---
+  const handleExport = () => {
+    // 1. Define CSV Headers
+    const headers = "Event Name,Attendance Rate (%)\n";
+
+    // 2. Format Data Rows
+    const rows = attendanceData.map(d => `${d.event},${d.attendance}`).join("\n");
+
+    // 3. Combine
+    const csvContent = "data:text/csv;charset=utf-8," + headers + rows;
+
+    // 4. Create Download Link
+    const encodedUri = encodeURI(csvContent);
+    const link = document.createElement("a");
+    link.setAttribute("href", encodedUri);
+    link.setAttribute("download", "college_event_analytics.csv");
+    document.body.appendChild(link);
+
+    // 5. Trigger & Clean up
+    link.click();
+    document.body.removeChild(link);
+  };
+
   return (
     <div className="space-y-6">
       {/* Header */}
@@ -39,14 +62,13 @@ export function Reports({ darkMode }) {
           <h2 className={`text-2xl font-bold ${darkMode ? 'text-gray-100' : 'text-[#111827]'}`}>Analytics & Reports</h2>
           <p className={`${darkMode ? 'text-gray-400' : 'text-gray-500'}`}>View detailed statistics and insights</p>
         </div>
-        
+
         <div className="flex gap-3">
-          {/* Custom Select */}
+          {/* Year Selector */}
           <div className="relative">
-            <select 
-              className={`appearance-none w-32 px-4 py-2 pr-8 rounded-lg border outline-none focus:ring-2 focus:ring-blue-500 cursor-pointer ${
-                darkMode ? 'bg-[#0F172A] border-gray-600 text-gray-200' : 'bg-white border-gray-300 text-gray-700'
-              }`}
+            <select
+              className={`appearance-none w-32 px-4 py-2 pr-8 rounded-lg border outline-none focus:ring-2 focus:ring-blue-500 cursor-pointer ${darkMode ? 'bg-[#0F172A] border-gray-600 text-gray-200' : 'bg-white border-gray-300 text-gray-700'
+                }`}
             >
               <option value="2024">2024</option>
               <option value="2023">2023</option>
@@ -55,7 +77,11 @@ export function Reports({ darkMode }) {
             <ChevronDown className={`absolute right-3 top-3 pointer-events-none ${darkMode ? 'text-gray-400' : 'text-gray-500'}`} size={16} />
           </div>
 
-          <button className="bg-[#3B82F6] hover:bg-[#2563EB] text-white px-4 py-2 rounded-lg flex items-center gap-2 font-medium transition-colors">
+          {/* Export Button (Now Functional) */}
+          <button
+            onClick={handleExport}
+            className="bg-[#3B82F6] hover:bg-[#2563EB] text-white px-4 py-2 rounded-lg flex items-center gap-2 font-medium transition-colors shadow-sm"
+          >
             <Download size={18} />
             Export Report
           </button>
@@ -70,21 +96,21 @@ export function Reports({ darkMode }) {
           { label: 'Avg Attendance', value: '87%', change: '+3% from last year', icon: TrendingUp, color: 'bg-purple-500' },
           { label: 'Satisfaction', value: '4.5', change: '+0.3 from last year', icon: TrendingUp, color: 'bg-orange-500' },
         ].map((stat, index) => {
-            const Icon = stat.icon;
-            return (
-              <div key={index} className={`p-6 rounded-xl border shadow-sm ${darkMode ? 'bg-[#1E293B] border-gray-700' : 'bg-white border-gray-200'}`}>
-                <div className="flex items-start justify-between">
-                  <div>
-                    <p className={`text-sm font-medium ${darkMode ? 'text-gray-400' : 'text-gray-500'}`}>{stat.label}</p>
-                    <h3 className={`text-3xl font-bold mt-2 ${darkMode ? 'text-gray-100' : 'text-[#111827]'}`}>{stat.value}</h3>
-                    <p className="text-green-500 text-sm mt-1 font-medium">{stat.change}</p>
-                  </div>
-                  <div className={`${stat.color} p-3 rounded-xl`}>
-                    <Icon size={24} className="text-white" />
-                  </div>
+          const Icon = stat.icon;
+          return (
+            <div key={index} className={`p-6 rounded-xl border shadow-sm ${darkMode ? 'bg-[#1E293B] border-gray-700' : 'bg-white border-gray-200'}`}>
+              <div className="flex items-start justify-between">
+                <div>
+                  <p className={`text-sm font-medium ${darkMode ? 'text-gray-400' : 'text-gray-500'}`}>{stat.label}</p>
+                  <h3 className={`text-3xl font-bold mt-2 ${darkMode ? 'text-gray-100' : 'text-[#111827]'}`}>{stat.value}</h3>
+                  <p className="text-green-500 text-sm mt-1 font-medium">{stat.change}</p>
+                </div>
+                <div className={`${stat.color} p-3 rounded-xl shadow-lg shadow-gray-400/20`}>
+                  <Icon size={24} className="text-white" />
                 </div>
               </div>
-            );
+            </div>
+          );
         })}
       </div>
 
@@ -109,12 +135,13 @@ export function Reports({ darkMode }) {
                   <Cell key={`cell-${index}`} fill={COLORS[index % COLORS.length]} />
                 ))}
               </Pie>
-              <Tooltip 
-                contentStyle={{ 
-                  backgroundColor: darkMode ? '#1E293B' : '#FFFFFF', 
+              <Tooltip
+                contentStyle={{
+                  backgroundColor: darkMode ? '#1E293B' : '#FFFFFF',
                   border: `1px solid ${darkMode ? '#374151' : '#E5E7EB'}`,
-                  borderRadius: '8px'
-                }} 
+                  borderRadius: '8px',
+                  color: darkMode ? '#fff' : '#000'
+                }}
               />
             </PieChart>
           </ResponsiveContainer>
@@ -128,12 +155,13 @@ export function Reports({ darkMode }) {
               <CartesianGrid strokeDasharray="3 3" stroke={darkMode ? '#374151' : '#E5E7EB'} />
               <XAxis type="number" stroke={darkMode ? '#9CA3AF' : '#6B7280'} />
               <YAxis dataKey="event" type="category" stroke={darkMode ? '#9CA3AF' : '#6B7280'} width={100} />
-              <Tooltip 
-                contentStyle={{ 
-                  backgroundColor: darkMode ? '#1E293B' : '#FFFFFF', 
+              <Tooltip
+                contentStyle={{
+                  backgroundColor: darkMode ? '#1E293B' : '#FFFFFF',
                   border: `1px solid ${darkMode ? '#374151' : '#E5E7EB'}`,
-                  borderRadius: '8px'
-                }} 
+                  borderRadius: '8px',
+                  color: darkMode ? '#fff' : '#000'
+                }}
               />
               <Bar dataKey="attendance" fill="#3B82F6" radius={[0, 8, 8, 0]} name="Attendance %" />
             </RechartsBarChart>
@@ -149,12 +177,13 @@ export function Reports({ darkMode }) {
             <CartesianGrid strokeDasharray="3 3" stroke={darkMode ? '#374151' : '#E5E7EB'} />
             <XAxis dataKey="month" stroke={darkMode ? '#9CA3AF' : '#6B7280'} />
             <YAxis stroke={darkMode ? '#9CA3AF' : '#6B7280'} />
-            <Tooltip 
-              contentStyle={{ 
-                backgroundColor: darkMode ? '#1E293B' : '#FFFFFF', 
+            <Tooltip
+              contentStyle={{
+                backgroundColor: darkMode ? '#1E293B' : '#FFFFFF',
                 border: `1px solid ${darkMode ? '#374151' : '#E5E7EB'}`,
-                borderRadius: '8px'
-              }} 
+                borderRadius: '8px',
+                color: darkMode ? '#fff' : '#000'
+              }}
             />
             <Legend />
             <Line type="monotone" dataKey="events" stroke="#3B82F6" strokeWidth={3} name="Events" />

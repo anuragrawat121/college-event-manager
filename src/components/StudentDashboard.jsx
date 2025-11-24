@@ -1,9 +1,9 @@
-import React from 'react';
-import { Calendar, MapPin, Clock, Users } from 'lucide-react';
+import React, { useState } from 'react';
+import { Calendar, MapPin, Clock, Users, CheckCircle, X } from 'lucide-react';
 
 export function StudentDashboard({ darkMode }) {
-    // Mock Data
-    const upcomingEvents = [
+    // --- State ---
+    const [upcomingEvents, setUpcomingEvents] = useState([
         {
             id: 1,
             title: 'Tech Workshop 2024',
@@ -13,6 +13,7 @@ export function StudentDashboard({ darkMode }) {
             category: 'Technical',
             seats: 150,
             registered: 120,
+            isRegistered: false,
         },
         {
             id: 2,
@@ -23,6 +24,7 @@ export function StudentDashboard({ darkMode }) {
             category: 'Career',
             seats: 300,
             registered: 280,
+            isRegistered: false,
         },
         {
             id: 3,
@@ -33,25 +35,47 @@ export function StudentDashboard({ darkMode }) {
             category: 'Cultural',
             seats: 500,
             registered: 450,
+            isRegistered: false,
         },
-    ];
+    ]);
 
-    const myEvents = [
-        {
-            id: 1,
-            title: 'Annual Seminar',
-            date: 'September 15, 2024',
-            status: 'Attended',
-        },
-        {
-            id: 2,
-            title: 'Tech Workshop 2024',
-            date: 'October 20, 2024',
-            status: 'Registered',
-        },
-    ];
+    const [myEvents, setMyEvents] = useState([
+        { id: 101, title: 'Annual Seminar', date: 'September 15, 2024', status: 'Attended' },
+        { id: 102, title: 'Tech Workshop 2024', date: 'October 20, 2024', status: 'Registered' },
+    ]);
 
-    // Helpers for colors
+    // New State for the Confirmation Modal
+    const [confirmingEvent, setConfirmingEvent] = useState(null);
+
+    // --- Logic ---
+
+    // 1. Open the Modal
+    const initiateRegistration = (event) => {
+        setConfirmingEvent(event);
+    };
+
+    // 2. Actually Register (Run this only when "Confirm" is clicked)
+    const handleConfirmRegister = () => {
+        if (!confirmingEvent) return;
+
+        // Update the list to show "Registered" button
+        setUpcomingEvents(upcomingEvents.map(e =>
+            e.id === confirmingEvent.id ? { ...e, isRegistered: true, registered: e.registered + 1 } : e
+        ));
+
+        // Add to "My Events" list
+        const newMyEvent = {
+            id: Date.now(),
+            title: confirmingEvent.title,
+            date: confirmingEvent.date,
+            status: 'Registered'
+        };
+        setMyEvents([newMyEvent, ...myEvents]);
+
+        // Close Modal
+        setConfirmingEvent(null);
+    };
+
     const getCategoryColor = (category) => {
         const colors = {
             Technical: 'bg-blue-500',
@@ -66,8 +90,8 @@ export function StudentDashboard({ darkMode }) {
     };
 
     return (
-        <div className="space-y-8">
-            {/* Header Section */}
+        <div className="space-y-8 relative">
+            {/* Header */}
             <div>
                 <h2 className={`text-3xl font-bold mb-2 ${darkMode ? 'text-gray-100' : 'text-[#111827]'}`}>
                     Upcoming Events
@@ -82,14 +106,12 @@ export function StudentDashboard({ darkMode }) {
                 {upcomingEvents.map((event) => (
                     <div
                         key={event.id}
-                        className={`rounded-xl border overflow-hidden transition-shadow hover:shadow-md ${darkMode ? 'bg-[#1E293B] border-gray-700' : 'bg-white border-gray-200'
+                        className={`rounded-xl border overflow-hidden transition-all hover:shadow-lg ${darkMode ? 'bg-[#1E293B] border-gray-700' : 'bg-white border-gray-200'
                             }`}
                     >
-                        {/* Colored Top Bar */}
                         <div className={`h-2 ${getCategoryColor(event.category)}`}></div>
 
                         <div className="p-6 space-y-4">
-                            {/* Title & Category */}
                             <div className="flex items-start justify-between mb-2">
                                 <h3 className={`text-lg font-bold ${darkMode ? 'text-gray-100' : 'text-slate-800'}`}>
                                     {event.title}
@@ -99,7 +121,6 @@ export function StudentDashboard({ darkMode }) {
                                 </span>
                             </div>
 
-                            {/* Event Details */}
                             <div className="space-y-3">
                                 <div className="flex items-center gap-3">
                                     <Calendar size={16} className="text-gray-400" />
@@ -129,10 +150,19 @@ export function StudentDashboard({ darkMode }) {
                                 ></div>
                             </div>
 
-                            {/* Action Button */}
-                            <button className="w-full bg-[#3B82F6] hover:bg-[#2563EB] text-white font-medium py-2 rounded-lg transition-colors shadow-sm">
-                                Register Now
-                            </button>
+                            {/* Logic Button */}
+                            {event.isRegistered ? (
+                                <button disabled className="w-full bg-green-600 text-white font-medium py-2 rounded-lg flex items-center justify-center gap-2 cursor-default opacity-90">
+                                    <CheckCircle size={18} /> Registered
+                                </button>
+                            ) : (
+                                <button
+                                    onClick={() => initiateRegistration(event)} // Open Modal
+                                    className="w-full bg-[#3B82F6] hover:bg-[#2563EB] text-white font-medium py-2 rounded-lg transition-colors shadow-sm"
+                                >
+                                    Register Now
+                                </button>
+                            )}
                         </div>
                     </div>
                 ))}
@@ -162,6 +192,45 @@ export function StudentDashboard({ darkMode }) {
                     ))}
                 </div>
             </div>
+
+            {/* Confirmation Modal */}
+            {confirmingEvent && (
+                <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/50 backdrop-blur-sm p-4">
+                    <div className={`w-full max-w-sm rounded-2xl shadow-2xl p-6 ${darkMode ? "bg-[#1E293B] text-white" : "bg-white text-slate-900"}`}>
+
+                        <div className="flex justify-between items-center mb-4">
+                            <h3 className="text-xl font-bold">Confirm Registration</h3>
+                            <button
+                                onClick={() => setConfirmingEvent(null)}
+                                className="p-1 rounded-full hover:bg-gray-200 dark:hover:bg-gray-700 transition"
+                            >
+                                <X size={20} />
+                            </button>
+                        </div>
+
+                        <p className={`mb-6 ${darkMode ? "text-gray-300" : "text-gray-600"}`}>
+                            Are you sure you want to register for <strong>{confirmingEvent.title}</strong>?
+                        </p>
+
+                        <div className="flex gap-3">
+                            <button
+                                onClick={() => setConfirmingEvent(null)}
+                                className="flex-1 px-4 py-2 rounded-lg border border-gray-300 font-medium hover:bg-gray-50 dark:hover:bg-gray-800 dark:border-gray-600 transition-colors"
+                            >
+                                Cancel
+                            </button>
+                            <button
+                                onClick={handleConfirmRegister}
+                                className="flex-1 px-4 py-2 rounded-lg bg-blue-600 text-white font-medium hover:bg-blue-700 transition-colors"
+                            >
+                                Confirm
+                            </button>
+                        </div>
+
+                    </div>
+                </div>
+            )}
+
         </div>
     );
 }

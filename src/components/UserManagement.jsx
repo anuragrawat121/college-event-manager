@@ -1,8 +1,7 @@
 import React, { useState } from 'react';
-import { Search, Trash2, UserPlus, Mail, Shield, X, User, CheckCircle, XCircle } from 'lucide-react';
+import { Search, Trash2, UserPlus, Mail, Shield, X, User, CheckCircle, XCircle, Edit } from 'lucide-react';
 
 export function UserManagement({ darkMode }) {
-    // Mock Data
     const [users, setUsers] = useState([
         { id: 1, name: 'Dr. Alan Smith', email: 'alan@college.edu', role: 'organizer', status: 'active' },
         { id: 2, name: 'Prof. Sarah Jones', email: 'sarah@college.edu', role: 'organizer', status: 'active' },
@@ -11,16 +10,32 @@ export function UserManagement({ darkMode }) {
         { id: 5, name: 'Admin User', email: 'admin@college.edu', role: 'admin', status: 'active' },
     ]);
 
-    // State for Modal
-    const [isDialogOpen, setIsDialogOpen] = useState(false);
+    // Search State
+    const [searchTerm, setSearchTerm] = useState("");
 
-    // State for New User Form
+    // Modal State
+    const [isDialogOpen, setIsDialogOpen] = useState(false);
+    const [editingUser, setEditingUser] = useState(null);
+
+    // Form State
     const [formData, setFormData] = useState({
         name: '',
         email: '',
         role: 'student',
         status: 'active'
     });
+
+    // Filter Users
+    const filteredUsers = users.filter(user =>
+        user.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
+        user.email.toLowerCase().includes(searchTerm.toLowerCase())
+    );
+
+    const handleEdit = (user) => {
+        setEditingUser(user);
+        setFormData(user); // Pre-fill the form
+        setIsDialogOpen(true);
+    }
 
     const handleDelete = (id) => {
         if (window.confirm('Are you sure you want to remove this user?')) {
@@ -30,15 +45,19 @@ export function UserManagement({ darkMode }) {
 
     const handleSave = (e) => {
         e.preventDefault();
-        // Add new user to the list
-        const newUser = {
-            id: Date.now(), // Generate a unique ID
-            ...formData
-        };
-        setUsers([newUser, ...users]); // Add to top of list
 
-        // Reset and close
+        if (editingUser) {
+            // Update existing user
+            setUsers(users.map(u => u.id === editingUser.id ? { ...formData, id: editingUser.id } : u));
+        } else {
+            // Add new user
+            const newUser = { id: Date.now(), ...formData };
+            setUsers([newUser, ...users]);
+        }
+
+        // Reset
         setIsDialogOpen(false);
+        setEditingUser(null);
         setFormData({ name: '', email: '', role: 'student', status: 'active' });
     };
 
@@ -60,7 +79,11 @@ export function UserManagement({ darkMode }) {
                     <p className={`${darkMode ? 'text-gray-400' : 'text-gray-500'}`}>Manage system access and roles</p>
                 </div>
                 <button
-                    onClick={() => setIsDialogOpen(true)}
+                    onClick={() => {
+                        setEditingUser(null);
+                        setFormData({ name: '', email: '', role: 'student', status: 'active' });
+                        setIsDialogOpen(true);
+                    }}
                     className="bg-[#3B82F6] hover:bg-[#2563EB] text-white px-4 py-2 rounded-lg flex items-center gap-2 font-medium transition-colors shadow-sm"
                 >
                     <UserPlus size={18} />
@@ -73,12 +96,14 @@ export function UserManagement({ darkMode }) {
 
                 {/* Toolbar */}
                 <div className={`p-4 border-b flex items-center justify-between ${darkMode ? 'border-gray-700' : 'border-gray-100'}`}>
-                    <h3 className={`font-bold ${darkMode ? 'text-gray-100' : 'text-gray-800'}`}>All Users ({users.length})</h3>
+                    <h3 className={`font-bold ${darkMode ? 'text-gray-100' : 'text-gray-800'}`}>All Users ({filteredUsers.length})</h3>
                     <div className={`flex items-center gap-2 px-3 py-2 rounded-lg border ${darkMode ? 'bg-[#0F172A] border-gray-600' : 'bg-gray-50 border-gray-200'}`}>
                         <Search size={18} className="text-gray-400" />
                         <input
                             type="text"
                             placeholder="Search users..."
+                            value={searchTerm}
+                            onChange={(e) => setSearchTerm(e.target.value)}
                             className={`bg-transparent border-none outline-none w-48 text-sm ${darkMode ? 'text-gray-200 placeholder-gray-500' : 'text-gray-800 placeholder-gray-400'}`}
                         />
                     </div>
@@ -96,7 +121,7 @@ export function UserManagement({ darkMode }) {
                             </tr>
                         </thead>
                         <tbody>
-                            {users.map((user) => (
+                            {filteredUsers.map((user) => (
                                 <tr key={user.id} className={`border-b last:border-0 ${darkMode ? 'border-gray-700 hover:bg-[#0F172A]' : 'border-gray-100 hover:bg-gray-50'} transition-colors`}>
                                     <td className="p-4">
                                         <div className="flex items-center gap-3">
@@ -122,13 +147,21 @@ export function UserManagement({ darkMode }) {
                                         </span>
                                     </td>
                                     <td className="p-4">
-                                        <button
-                                            onClick={() => handleDelete(user.id)}
-                                            className={`p-2 rounded-lg hover:bg-red-50 ${darkMode ? 'text-red-400 hover:bg-red-900/20' : 'text-red-500'}`}
-                                            title="Delete User"
-                                        >
-                                            <Trash2 size={16} />
-                                        </button>
+                                        <div className="flex gap-2">
+                                            {/* ADDED EDIT BUTTON */}
+                                            <button
+                                                onClick={() => handleEdit(user)}
+                                                className={`p-2 rounded-lg hover:bg-gray-100 ${darkMode ? 'text-gray-400 hover:bg-gray-800' : 'text-gray-500'}`}
+                                            >
+                                                <Edit size={16} />
+                                            </button>
+                                            <button
+                                                onClick={() => handleDelete(user.id)}
+                                                className={`p-2 rounded-lg hover:bg-red-50 ${darkMode ? 'text-red-400 hover:bg-red-900/20' : 'text-red-500'}`}
+                                            >
+                                                <Trash2 size={16} />
+                                            </button>
+                                        </div>
                                     </td>
                                 </tr>
                             ))}
@@ -137,13 +170,13 @@ export function UserManagement({ darkMode }) {
                 </div>
             </div>
 
-            {/* Add User Modal */}
+            {/* Add/Edit User Modal */}
             {isDialogOpen && (
                 <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/50 backdrop-blur-sm p-4">
                     <div className={`w-full max-w-md rounded-2xl shadow-2xl p-6 ${darkMode ? "bg-[#1E293B] text-white" : "bg-white text-slate-900"}`}>
 
                         <div className="flex justify-between items-center mb-6">
-                            <h3 className="text-xl font-bold">Add New User</h3>
+                            <h3 className="text-xl font-bold">{editingUser ? "Edit User" : "Add New User"}</h3>
                             <button onClick={() => setIsDialogOpen(false)} className="p-1 rounded-full hover:bg-gray-200 dark:hover:bg-gray-700 transition">
                                 <X size={20} />
                             </button>
@@ -222,7 +255,7 @@ export function UserManagement({ darkMode }) {
                                     type="submit"
                                     className="flex-1 px-4 py-2 rounded-lg bg-blue-600 text-white font-medium hover:bg-blue-700 transition-colors"
                                 >
-                                    Create User
+                                    {editingUser ? "Save Changes" : "Create User"}
                                 </button>
                             </div>
                         </form>
