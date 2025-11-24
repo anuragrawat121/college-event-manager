@@ -3,6 +3,7 @@ import { QrCode, Search, CheckCircle, XCircle, ChevronDown } from "lucide-react"
 
 export function Attendance({ darkMode }) {
     const [selectedEvent, setSelectedEvent] = useState("tech-workshop");
+    const [searchTerm, setSearchTerm] = useState(""); // 1. Added Search State
 
     // Mock Data
     const attendanceData = [
@@ -13,12 +14,17 @@ export function Attendance({ darkMode }) {
         { id: 5, name: "Tom Brown", rollNo: "CS105", email: "tom@college.edu", status: "present", time: "10:15 AM" },
     ];
 
-    const stats = {
-        total: 150,
-        present: 130,
-        absent: 20,
-        percentage: 87,
-    };
+    // 2. Filter Logic
+    const filteredData = attendanceData.filter(student =>
+        student.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
+        student.rollNo.toLowerCase().includes(searchTerm.toLowerCase())
+    );
+
+    // 3. Dynamic Stats (Recalculate based on filter or total data)
+    const total = filteredData.length;
+    const present = filteredData.filter(s => s.status === 'present').length;
+    const absent = filteredData.filter(s => s.status === 'absent').length;
+    const percentage = total > 0 ? Math.round((present / total) * 100) : 0;
 
     return (
         <div className="space-y-6">
@@ -38,30 +44,30 @@ export function Attendance({ darkMode }) {
                 </button>
             </div>
 
-            {/* Stats Grid */}
+            {/* Stats Grid - Dynamic Now */}
             <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
                 {/* Total Card */}
                 <div className={`p-6 rounded-xl border shadow-sm ${darkMode ? "bg-[#1E293B] border-gray-700" : "bg-white border-gray-200"}`}>
                     <p className={`text-sm font-medium ${darkMode ? "text-gray-400" : "text-gray-500"}`}>Total Registered</p>
-                    <h3 className={`text-3xl font-bold mt-2 ${darkMode ? "text-gray-100" : "text-[#111827]"}`}>{stats.total}</h3>
+                    <h3 className={`text-3xl font-bold mt-2 ${darkMode ? "text-gray-100" : "text-[#111827]"}`}>{total}</h3>
                 </div>
 
                 {/* Present Card */}
                 <div className={`p-6 rounded-xl border shadow-sm ${darkMode ? "bg-[#1E293B] border-gray-700" : "bg-white border-gray-200"}`}>
                     <p className={`text-sm font-medium ${darkMode ? "text-gray-400" : "text-gray-500"}`}>Present</p>
-                    <h3 className="text-3xl font-bold mt-2 text-green-500">{stats.present}</h3>
+                    <h3 className="text-3xl font-bold mt-2 text-green-500">{present}</h3>
                 </div>
 
                 {/* Absent Card */}
                 <div className={`p-6 rounded-xl border shadow-sm ${darkMode ? "bg-[#1E293B] border-gray-700" : "bg-white border-gray-200"}`}>
                     <p className={`text-sm font-medium ${darkMode ? "text-gray-400" : "text-gray-500"}`}>Absent</p>
-                    <h3 className="text-3xl font-bold mt-2 text-red-500">{stats.absent}</h3>
+                    <h3 className="text-3xl font-bold mt-2 text-red-500">{absent}</h3>
                 </div>
 
                 {/* Percentage Card */}
                 <div className={`p-6 rounded-xl border shadow-sm ${darkMode ? "bg-[#1E293B] border-gray-700" : "bg-white border-gray-200"}`}>
                     <p className={`text-sm font-medium ${darkMode ? "text-gray-400" : "text-gray-500"}`}>Attendance %</p>
-                    <h3 className={`text-3xl font-bold mt-2 ${darkMode ? "text-gray-100" : "text-[#111827]"}`}>{stats.percentage}%</h3>
+                    <h3 className={`text-3xl font-bold mt-2 ${darkMode ? "text-gray-100" : "text-[#111827]"}`}>{percentage}%</h3>
                 </div>
             </div>
 
@@ -78,8 +84,7 @@ export function Attendance({ darkMode }) {
                             <select
                                 value={selectedEvent}
                                 onChange={(e) => setSelectedEvent(e.target.value)}
-                                className={`appearance-none w-full md:w-64 px-4 py-2 pr-8 rounded-lg border outline-none focus:ring-2 focus:ring-blue-500 ${darkMode ? "bg-[#0F172A] border-gray-600 text-gray-200" : "bg-gray-50 border-gray-300 text-gray-700"
-                                    }`}
+                                className={`appearance-none w-full md:w-64 px-4 py-2 pr-8 rounded-lg border outline-none focus:ring-2 focus:ring-blue-500 ${darkMode ? "bg-[#0F172A] border-gray-600 text-gray-200" : "bg-gray-50 border-gray-300 text-gray-700"}`}
                             >
                                 <option value="tech-workshop">Tech Workshop 2024</option>
                                 <option value="career-fair">Career Fair</option>
@@ -88,15 +93,15 @@ export function Attendance({ darkMode }) {
                             <ChevronDown className={`absolute right-3 top-3 pointer-events-none ${darkMode ? "text-gray-400" : "text-gray-500"}`} size={16} />
                         </div>
 
-                        {/* Search Input */}
-                        <div className={`flex items-center gap-2 px-3 py-2 rounded-lg border w-full md:w-auto ${darkMode ? "bg-[#0F172A] border-gray-600" : "bg-gray-50 border-gray-300"
-                            }`}>
+                        {/* Search Input (Now Functional) */}
+                        <div className={`flex items-center gap-2 px-3 py-2 rounded-lg border w-full md:w-auto ${darkMode ? "bg-[#0F172A] border-gray-600" : "bg-gray-50 border-gray-300"}`}>
                             <Search size={18} className="text-gray-400" />
                             <input
                                 type="text"
                                 placeholder="Search students..."
-                                className={`bg-transparent border-none outline-none w-full md:w-48 ${darkMode ? "text-gray-200 placeholder-gray-500" : "text-gray-800 placeholder-gray-400"
-                                    }`}
+                                value={searchTerm} // Hooked up
+                                onChange={(e) => setSearchTerm(e.target.value)} // Hooked up
+                                className={`bg-transparent border-none outline-none w-full md:w-48 ${darkMode ? "text-gray-200 placeholder-gray-500" : "text-gray-800 placeholder-gray-400"}`}
                             />
                         </div>
                     </div>
@@ -115,7 +120,7 @@ export function Attendance({ darkMode }) {
                             </tr>
                         </thead>
                         <tbody>
-                            {attendanceData.map((student) => (
+                            {filteredData.map((student) => ( // Using filteredData instead of attendanceData
                                 <tr key={student.id} className={`border-b last:border-0 ${darkMode ? "border-gray-700 hover:bg-[#0F172A]" : "border-gray-100 hover:bg-gray-50"} transition-colors`}>
                                     <td className={`p-4 ${darkMode ? "text-gray-200" : "text-gray-800"}`}>{student.name}</td>
                                     <td className={`p-4 ${darkMode ? "text-gray-400" : "text-gray-600"}`}>{student.rollNo}</td>

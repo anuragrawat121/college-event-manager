@@ -6,6 +6,7 @@ import Sidebar from './components/Sidebar';
 import Header from './components/Header';
 import { AdminDashboard } from './components/AdminDashboard';
 import { StudentDashboard } from './components/StudentDashboard';
+import { OrganizerDashboard } from './components/OrganizerDashboard';
 import { Attendance } from './components/Attendance';
 import { EventManagement } from './components/EventManagement';
 import { Reports } from './components/Reports';
@@ -84,12 +85,34 @@ export default function App() {
       }
     }
 
-    // --- Admin/Organizer Routes ---
+    // --- Organizer Routes ---
+    if (userRole === 'organizer') {
+      switch (activeScreen) {
+        case 'dashboard': return <OrganizerDashboard darkMode={darkMode} userName={userName} />;
+        case 'events': return <EventManagement darkMode={darkMode} userRole={userRole} userName={userName} />;
+        case 'attendance': return <Attendance darkMode={darkMode} userRole={userRole} />;
+        case 'reports': return <Reports darkMode={darkMode} />;
+        case 'settings': return <Settings darkMode={darkMode} toggleDarkMode={toggleDarkMode} />;
+        case 'calendar': return <CalendarView darkMode={darkMode} />;
+        case 'notifications': return <Notifications darkMode={darkMode} userRole={userRole} />;
+        case 'profile': return <Profile darkMode={darkMode} user={{ name: userName, role: userRole }} />;
+        default: return <OrganizerDashboard darkMode={darkMode} userName={userName} />;
+      }
+    }
+
+    // --- Admin Routes ---
     switch (activeScreen) {
       case 'dashboard': return <AdminDashboard darkMode={darkMode} />;
       case 'calendar': return <CalendarView darkMode={darkMode} />;
-      case 'events': return <EventManagement darkMode={darkMode} />;
-      case 'attendance': return <Attendance darkMode={darkMode} />;
+      case 'events':
+        return (
+          <EventManagement
+            darkMode={darkMode}
+            userRole={userRole} // Pass Role
+            userName={userName} // Pass Name (for filtering)
+          />
+        );
+      case 'attendance': return <Attendance darkMode={darkMode} userRole={userRole} />;
       case 'reports': return <Reports darkMode={darkMode} />;
       case 'feedback': return <Feedback darkMode={darkMode} />;
       case 'users': return <UserManagement darkMode={darkMode} />;
