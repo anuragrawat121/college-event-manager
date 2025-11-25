@@ -1,9 +1,12 @@
-import React from 'react';
+import React, { useState } from 'react';
 import { BarChart as RechartsBarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, Legend, ResponsiveContainer, PieChart, Pie, Cell, LineChart, Line } from 'recharts';
-import { Download, TrendingUp, Users, Calendar, ChevronDown } from 'lucide-react';
+import { Download, TrendingUp, Users, Calendar, ChevronDown, Lock } from 'lucide-react';
 
-export function Reports({ darkMode }) {
-  // --- Mock Data ---
+export function Reports({ darkMode, userRole }) {
+  // --- State for Year Filter ---
+  const [selectedYear, setSelectedYear] = useState("2024");
+
+  // --- Data ---
   const eventCategoryData = [
     { name: 'Technical', value: 35 },
     { name: 'Cultural', value: 25 },
@@ -31,25 +34,31 @@ export function Reports({ darkMode }) {
 
   const COLORS = ['#3B82F6', '#10B981', '#F59E0B', '#EF4444', '#8B5CF6'];
 
-  // --- Export Logic ---
+  // --- ROLE BASED FILTERING ---
+  const isOrganizer = userRole === 'organizer';
+
+  // Admins see 4 cards. Organizers see only 2 (Participants & Attendance).
+  const allStats = [
+    { id: 'events', label: 'Total Events', value: '48', change: '+12%', icon: Calendar, color: 'bg-blue-500' },
+    { id: 'users', label: 'Total Participants', value: '3,120', change: '+18%', icon: Users, color: 'bg-green-500' },
+    { id: 'attendance', label: 'Avg Attendance', value: '87%', change: '+3%', icon: TrendingUp, color: 'bg-purple-500' },
+    { id: 'satisfaction', label: 'Satisfaction', value: '4.5', change: '+0.3', icon: TrendingUp, color: 'bg-orange-500' },
+  ];
+
+  // Filter stats: Organizers only care about People and Attendance rates
+  const visibleStats = isOrganizer
+    ? allStats.filter(s => s.id === 'users' || s.id === 'attendance')
+    : allStats;
+
   const handleExport = () => {
-    // 1. Define CSV Headers
     const headers = "Event Name,Attendance Rate (%)\n";
-
-    // 2. Format Data Rows
     const rows = attendanceData.map(d => `${d.event},${d.attendance}`).join("\n");
-
-    // 3. Combine
     const csvContent = "data:text/csv;charset=utf-8," + headers + rows;
-
-    // 4. Create Download Link
     const encodedUri = encodeURI(csvContent);
     const link = document.createElement("a");
     link.setAttribute("href", encodedUri);
-    link.setAttribute("download", "college_event_analytics.csv");
+    link.setAttribute("download", "attendance_report.csv");
     document.body.appendChild(link);
-
-    // 5. Trigger & Clean up
     link.click();
     document.body.removeChild(link);
   };
@@ -59,12 +68,15 @@ export function Reports({ darkMode }) {
       {/* Header */}
       <div className="flex flex-col md:flex-row md:items-center justify-between gap-4">
         <div>
-          <h2 className={`text-2xl font-bold ${darkMode ? 'text-gray-100' : 'text-[#111827]'}`}>Analytics & Reports</h2>
-          <p className={`${darkMode ? 'text-gray-400' : 'text-gray-500'}`}>View detailed statistics and insights</p>
+          <h2 className={`text-2xl font-bold ${darkMode ? 'text-gray-100' : 'text-[#111827]'}`}>
+            {isOrganizer ? 'Attendance Reports' : 'Analytics & Reports'}
+          </h2>
+          <p className={`${darkMode ? 'text-gray-400' : 'text-gray-500'}`}>
+            {isOrganizer ? 'Track student participation for your events' : 'View detailed statistics and insights'}
+          </p>
         </div>
 
         <div className="flex gap-3">
-          {/* Year Selector */}
           <div className="relative">
             <select
               className={`appearance-none w-32 px-4 py-2 pr-8 rounded-lg border outline-none focus:ring-2 focus:ring-blue-500 cursor-pointer ${darkMode ? 'bg-[#0F172A] border-gray-600 text-gray-200' : 'bg-white border-gray-300 text-gray-700'
@@ -72,30 +84,20 @@ export function Reports({ darkMode }) {
             >
               <option value="2024">2024</option>
               <option value="2023">2023</option>
-              <option value="2022">2022</option>
             </select>
             <ChevronDown className={`absolute right-3 top-3 pointer-events-none ${darkMode ? 'text-gray-400' : 'text-gray-500'}`} size={16} />
           </div>
 
-          {/* Export Button (Now Functional) */}
-          <button
-            onClick={handleExport}
-            className="bg-[#3B82F6] hover:bg-[#2563EB] text-white px-4 py-2 rounded-lg flex items-center gap-2 font-medium transition-colors shadow-sm"
-          >
+          <button onClick={handleExport} className="bg-[#3B82F6] hover:bg-[#2563EB] text-white px-4 py-2 rounded-lg flex items-center gap-2 font-medium transition-colors shadow-sm">
             <Download size={18} />
-            Export Report
+            Export
           </button>
         </div>
       </div>
 
-      {/* Stats Grid */}
-      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
-        {[
-          { label: 'Total Events', value: '48', change: '+12% from last year', icon: Calendar, color: 'bg-blue-500' },
-          { label: 'Total Participants', value: '3,120', change: '+18% from last year', icon: Users, color: 'bg-green-500' },
-          { label: 'Avg Attendance', value: '87%', change: '+3% from last year', icon: TrendingUp, color: 'bg-purple-500' },
-          { label: 'Satisfaction', value: '4.5', change: '+0.3 from last year', icon: TrendingUp, color: 'bg-orange-500' },
-        ].map((stat, index) => {
+      {/* Stats Grid (Filtered by Role) */}
+      <div className={`grid grid-cols-1 md:grid-cols-2 ${isOrganizer ? 'lg:grid-cols-2' : 'lg:grid-cols-4'} gap-6`}>
+        {visibleStats.map((stat, index) => {
           const Icon = stat.icon;
           return (
             <div key={index} className={`p-6 rounded-xl border shadow-sm ${darkMode ? 'bg-[#1E293B] border-gray-700' : 'bg-white border-gray-200'}`}>
@@ -114,42 +116,40 @@ export function Reports({ darkMode }) {
         })}
       </div>
 
-      {/* Middle Charts Grid */}
-      <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
-        {/* Pie Chart */}
-        <div className={`rounded-xl border shadow-sm p-6 ${darkMode ? 'bg-[#1E293B] border-gray-700' : 'bg-white border-gray-200'}`}>
-          <h3 className={`text-lg font-bold mb-6 ${darkMode ? 'text-gray-100' : 'text-gray-800'}`}>Event Categories</h3>
-          <ResponsiveContainer width="100%" height={300}>
-            <PieChart>
-              <Pie
-                data={eventCategoryData}
-                cx="50%"
-                cy="50%"
-                labelLine={false}
-                label={({ name, percent }) => `${name} ${(percent * 100).toFixed(0)}%`}
-                outerRadius={100}
-                fill="#8884d8"
-                dataKey="value"
-              >
-                {eventCategoryData.map((entry, index) => (
-                  <Cell key={`cell-${index}`} fill={COLORS[index % COLORS.length]} />
-                ))}
-              </Pie>
-              <Tooltip
-                contentStyle={{
-                  backgroundColor: darkMode ? '#1E293B' : '#FFFFFF',
-                  border: `1px solid ${darkMode ? '#374151' : '#E5E7EB'}`,
-                  borderRadius: '8px',
-                  color: darkMode ? '#fff' : '#000'
-                }}
-              />
-            </PieChart>
-          </ResponsiveContainer>
-        </div>
+      {/* Charts Grid */}
+      <div className={`grid grid-cols-1 ${isOrganizer ? 'lg:grid-cols-1' : 'lg:grid-cols-2'} gap-6`}>
 
-        {/* Horizontal Bar Chart */}
+        {/* 1. EVENT CATEGORIES (HIDDEN FOR ORGANIZER) */}
+        {!isOrganizer && (
+          <div className={`rounded-xl border shadow-sm p-6 ${darkMode ? 'bg-[#1E293B] border-gray-700' : 'bg-white border-gray-200'}`}>
+            <h3 className={`text-lg font-bold mb-6 ${darkMode ? 'text-gray-100' : 'text-gray-800'}`}>Event Categories</h3>
+            <ResponsiveContainer width="100%" height={300}>
+              <PieChart>
+                <Pie
+                  data={eventCategoryData}
+                  cx="50%"
+                  cy="50%"
+                  labelLine={false}
+                  label={({ name, percent }) => `${name} ${(percent * 100).toFixed(0)}%`}
+                  outerRadius={100}
+                  fill="#8884d8"
+                  dataKey="value"
+                >
+                  {eventCategoryData.map((entry, index) => (
+                    <Cell key={`cell-${index}`} fill={COLORS[index % COLORS.length]} />
+                  ))}
+                </Pie>
+                <Tooltip contentStyle={{ backgroundColor: darkMode ? '#1E293B' : '#FFFFFF', border: `1px solid ${darkMode ? '#374151' : '#E5E7EB'}`, borderRadius: '8px', color: darkMode ? '#fff' : '#000' }} />
+              </PieChart>
+            </ResponsiveContainer>
+          </div>
+        )}
+
+        {/* 2. ATTENDANCE BAR CHART (VISIBLE TO ALL) */}
         <div className={`rounded-xl border shadow-sm p-6 ${darkMode ? 'bg-[#1E293B] border-gray-700' : 'bg-white border-gray-200'}`}>
-          <h3 className={`text-lg font-bold mb-6 ${darkMode ? 'text-gray-100' : 'text-gray-800'}`}>Attendance Rate by Event</h3>
+          <h3 className={`text-lg font-bold mb-6 ${darkMode ? 'text-gray-100' : 'text-gray-800'}`}>
+            {isOrganizer ? 'Attendance by Event' : 'Attendance Rate by Event'}
+          </h3>
           <ResponsiveContainer width="100%" height={300}>
             <RechartsBarChart data={attendanceData} layout="vertical">
               <CartesianGrid strokeDasharray="3 3" stroke={darkMode ? '#374151' : '#E5E7EB'} />
@@ -169,9 +169,11 @@ export function Reports({ darkMode }) {
         </div>
       </div>
 
-      {/* Bottom Line Chart */}
+      {/* 3. BOTTOM LINE CHART (VISIBLE TO ALL - Shows Activity) */}
       <div className={`rounded-xl border shadow-sm p-6 ${darkMode ? 'bg-[#1E293B] border-gray-700' : 'bg-white border-gray-200'}`}>
-        <h3 className={`text-lg font-bold mb-6 ${darkMode ? 'text-gray-100' : 'text-gray-800'}`}>Monthly Trends</h3>
+        <h3 className={`text-lg font-bold mb-6 ${darkMode ? 'text-gray-100' : 'text-gray-800'}`}>
+          {isOrganizer ? 'Student Participation Trends' : 'Monthly Trends'}
+        </h3>
         <ResponsiveContainer width="100%" height={350}>
           <LineChart data={monthlyData}>
             <CartesianGrid strokeDasharray="3 3" stroke={darkMode ? '#374151' : '#E5E7EB'} />
@@ -186,8 +188,9 @@ export function Reports({ darkMode }) {
               }}
             />
             <Legend />
-            <Line type="monotone" dataKey="events" stroke="#3B82F6" strokeWidth={3} name="Events" />
-            <Line type="monotone" dataKey="students" stroke="#10B981" strokeWidth={3} name="Students" />
+            {/* Admin sees Events line, Organizer only sees Students line */}
+            {!isOrganizer && <Line type="monotone" dataKey="events" stroke="#3B82F6" strokeWidth={3} name="Events Created" />}
+            <Line type="monotone" dataKey="students" stroke="#10B981" strokeWidth={3} name="Students Attended" />
           </LineChart>
         </ResponsiveContainer>
       </div>
