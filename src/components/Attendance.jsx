@@ -1,10 +1,10 @@
-import React, { useState } from "react";
+import React, { useState, useEffect } from "react";
 import { QrCode, Search, CheckCircle, XCircle, ChevronDown } from "lucide-react";
 
-export function Attendance({ darkMode, userRole }) {
-    const [selectedEvent, setSelectedEvent] = useState("tech-workshop");
-    const [searchTerm, setSearchTerm] = useState(""); // 1. Search State
-
+export function Attendance({ darkMode, userRole, events = [] }) {
+    const [selectedEvent, setSelectedEvent] = useState(events[0]?.id || "");
+    const [searchTerm, setSearchTerm] = useState("");
+    useEffect(() => { if (events.length > 0 && !selectedEvent) setSelectedEvent(events[0].id); }, [events]);
     const [attendanceData, setAttendanceData] = useState([
         { id: 1, name: "John Doe", rollNo: "CS101", email: "john@college.edu", status: "present", time: "10:05 AM" },
         { id: 2, name: "Jane Smith", rollNo: "CS102", email: "jane@college.edu", status: "present", time: "10:02 AM" },
@@ -12,26 +12,8 @@ export function Attendance({ darkMode, userRole }) {
         { id: 4, name: "Sarah Williams", rollNo: "CS104", email: "sarah@college.edu", status: "present", time: "10:08 AM" },
         { id: 5, name: "Tom Brown", rollNo: "CS105", email: "tom@college.edu", status: "present", time: "10:15 AM" },
     ]);
-
-    // 2. Toggle Status Logic (Organizer Feature)
-    const toggleStatus = (id) => {
-        setAttendanceData(attendanceData.map(student => {
-            if (student.id === id) {
-                const newStatus = student.status === 'present' ? 'absent' : 'present';
-                const newTime = newStatus === 'present' ? new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }) : '-';
-                return { ...student, status: newStatus, time: newTime };
-            }
-            return student;
-        }));
-    };
-
-    // 3. Filter Logic
-    const filteredData = attendanceData.filter(student =>
-        student.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
-        student.rollNo.toLowerCase().includes(searchTerm.toLowerCase())
-    );
-
-    // 4. Dynamic Stats
+    const toggleStatus = (id) => { setAttendanceData(attendanceData.map(student => { if (student.id === id) { const newStatus = student.status === 'present' ? 'absent' : 'present'; const newTime = newStatus === 'present' ? new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }) : '-'; return { ...student, status: newStatus, time: newTime }; } return student; })); };
+    const filteredData = attendanceData.filter(student => student.name.toLowerCase().includes(searchTerm.toLowerCase()) || student.rollNo.toLowerCase().includes(searchTerm.toLowerCase()));
     const total = filteredData.length;
     const present = filteredData.filter(s => s.status === 'present').length;
     const absent = filteredData.filter(s => s.status === 'absent').length;
@@ -39,125 +21,9 @@ export function Attendance({ darkMode, userRole }) {
 
     return (
         <div className="space-y-6">
-            {/* Header Section */}
-            <div className="flex flex-col md:flex-row md:items-center justify-between gap-4">
-                <div>
-                    <h2 className={`text-2xl font-bold ${darkMode ? "text-gray-100" : "text-[#111827]"}`}>
-                        Attendance Management
-                    </h2>
-                    <p className={`${darkMode ? "text-gray-400" : "text-gray-500"}`}>
-                        {userRole === 'admin' ? 'Generate QR codes and view records' : 'Mark student attendance manually'}
-                    </p>
-                </div>
-
-                {/* Admin Only: Generate QR */}
-                {userRole === 'admin' && (
-                    <button className="bg-[#3B82F6] hover:bg-[#2563EB] text-white px-4 py-2 rounded-lg flex items-center gap-2 font-medium transition-colors">
-                        <QrCode size={18} />
-                        Generate QR Code
-                    </button>
-                )}
-            </div>
-
-            {/* Stats Grid - Now Dynamic */}
-            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
-                <div className={`p-6 rounded-xl border shadow-sm ${darkMode ? "bg-[#1E293B] border-gray-700" : "bg-white border-gray-200"}`}>
-                    <p className={`text-sm font-medium ${darkMode ? "text-gray-400" : "text-gray-500"}`}>Total</p>
-                    <h3 className={`text-3xl font-bold mt-2 ${darkMode ? "text-gray-100" : "text-[#111827]"}`}>{total}</h3>
-                </div>
-                <div className={`p-6 rounded-xl border shadow-sm ${darkMode ? "bg-[#1E293B] border-gray-700" : "bg-white border-gray-200"}`}>
-                    <p className={`text-sm font-medium ${darkMode ? "text-gray-400" : "text-gray-500"}`}>Present</p>
-                    <h3 className="text-3xl font-bold mt-2 text-green-500">{present}</h3>
-                </div>
-                <div className={`p-6 rounded-xl border shadow-sm ${darkMode ? "bg-[#1E293B] border-gray-700" : "bg-white border-gray-200"}`}>
-                    <p className={`text-sm font-medium ${darkMode ? "text-gray-400" : "text-gray-500"}`}>Absent</p>
-                    <h3 className="text-3xl font-bold mt-2 text-red-500">{absent}</h3>
-                </div>
-                <div className={`p-6 rounded-xl border shadow-sm ${darkMode ? "bg-[#1E293B] border-gray-700" : "bg-white border-gray-200"}`}>
-                    <p className={`text-sm font-medium ${darkMode ? "text-gray-400" : "text-gray-500"}`}>Attendance %</p>
-                    <h3 className={`text-3xl font-bold mt-2 ${darkMode ? "text-gray-100" : "text-[#111827]"}`}>{percentage}%</h3>
-                </div>
-            </div>
-
-            {/* Table Card */}
-            <div className={`rounded-xl border shadow-sm ${darkMode ? "bg-[#1E293B] border-gray-700" : "bg-white border-gray-200"}`}>
-                <div className="p-6 border-b border-gray-200 dark:border-gray-700 flex flex-col md:flex-row items-center justify-between gap-4">
-                    <h3 className={`text-lg font-bold ${darkMode ? "text-gray-100" : "text-gray-800"}`}>Records</h3>
-
-                    <div className="flex items-center gap-4 w-full md:w-auto">
-                        <div className="relative">
-                            <select
-                                value={selectedEvent}
-                                onChange={(e) => setSelectedEvent(e.target.value)}
-                                className={`appearance-none w-full md:w-64 px-4 py-2 pr-8 rounded-lg border outline-none focus:ring-2 focus:ring-blue-500 ${darkMode ? "bg-[#0F172A] border-gray-600 text-gray-200" : "bg-gray-50 border-gray-300 text-gray-700"}`}
-                            >
-                                <option value="tech-workshop">Tech Workshop 2024</option>
-                                <option value="career-fair">Career Fair</option>
-                            </select>
-                            <ChevronDown className={`absolute right-3 top-3 pointer-events-none ${darkMode ? "text-gray-400" : "text-gray-500"}`} size={16} />
-                        </div>
-
-                        <div className={`flex items-center gap-2 px-3 py-2 rounded-lg border w-full md:w-auto ${darkMode ? "bg-[#0F172A] border-gray-600" : "bg-gray-50 border-gray-300"}`}>
-                            <Search size={18} className="text-gray-400" />
-                            <input
-                                type="text"
-                                placeholder="Search..."
-                                value={searchTerm}
-                                onChange={(e) => setSearchTerm(e.target.value)} // Connected Search
-                                className={`bg-transparent border-none outline-none w-full md:w-48 ${darkMode ? "text-gray-200 placeholder-gray-500" : "text-gray-800 placeholder-gray-400"}`}
-                            />
-                        </div>
-                    </div>
-                </div>
-
-                <div className="overflow-x-auto">
-                    <table className="w-full text-left border-collapse">
-                        <thead>
-                            <tr className={`border-b ${darkMode ? "border-gray-700" : "border-gray-200"}`}>
-                                <th className={`p-4 font-medium text-sm ${darkMode ? "text-gray-400" : "text-gray-500"}`}>Name</th>
-                                <th className={`p-4 font-medium text-sm ${darkMode ? "text-gray-400" : "text-gray-500"}`}>Roll No</th>
-                                <th className={`p-4 font-medium text-sm ${darkMode ? "text-gray-400" : "text-gray-500"}`}>Time</th>
-                                <th className={`p-4 font-medium text-sm ${darkMode ? "text-gray-400" : "text-gray-500"}`}>Status</th>
-                                {userRole === 'organizer' && <th className={`p-4 font-medium text-sm ${darkMode ? "text-gray-400" : "text-gray-500"}`}>Action</th>}
-                            </tr>
-                        </thead>
-                        <tbody>
-                            {filteredData.map((student) => (
-                                <tr key={student.id} className={`border-b last:border-0 ${darkMode ? "border-gray-700 hover:bg-[#0F172A]" : "border-gray-100 hover:bg-gray-50"} transition-colors`}>
-                                    <td className={`p-4 ${darkMode ? "text-gray-200" : "text-gray-800"}`}>{student.name}</td>
-                                    <td className={`p-4 ${darkMode ? "text-gray-400" : "text-gray-600"}`}>{student.rollNo}</td>
-                                    <td className={`p-4 ${darkMode ? "text-gray-400" : "text-gray-600"}`}>{student.time}</td>
-                                    <td className="p-4">
-                                        <span className={`inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium ${student.status === "present"
-                                                ? "bg-green-100 text-green-800 dark:bg-green-900/30 dark:text-green-400"
-                                                : "bg-red-100 text-red-800 dark:bg-red-900/30 dark:text-red-400"
-                                            }`}>
-                                            {student.status === "present" ? <CheckCircle size={12} className="mr-1" /> : <XCircle size={12} className="mr-1" />}
-                                            {student.status.charAt(0).toUpperCase() + student.status.slice(1)}
-                                        </span>
-                                    </td>
-
-                                    {/* Organizer Action Button */}
-                                    {userRole === 'organizer' && (
-                                        <td className="p-4">
-                                            <button
-                                                onClick={() => toggleStatus(student.id)}
-                                                className={`p-2 rounded-lg transition-colors ${student.status === 'present'
-                                                        ? 'text-red-500 hover:bg-red-50'
-                                                        : 'text-green-500 hover:bg-green-50'
-                                                    }`}
-                                                title={student.status === 'present' ? "Mark Absent" : "Mark Present"}
-                                            >
-                                                {student.status === 'present' ? <XCircle size={20} /> : <CheckCircle size={20} />}
-                                            </button>
-                                        </td>
-                                    )}
-                                </tr>
-                            ))}
-                        </tbody>
-                    </table>
-                </div>
-            </div>
+            <div className="flex flex-col md:flex-row md:items-center justify-between gap-4"><div><h2 className={`text-2xl font-bold ${darkMode ? "text-gray-100" : "text-[#111827]"}`}>Attendance Management</h2><p className={`${darkMode ? "text-gray-400" : "text-gray-500"}`}>{userRole === 'admin' ? 'Generate QR codes and view records' : 'Mark student attendance manually'}</p></div>{userRole === 'admin' && (<button className="bg-[#3B82F6] hover:bg-[#2563EB] text-white px-4 py-2 rounded-lg flex items-center gap-2 font-medium transition-colors"><QrCode size={18} /> Generate QR Code</button>)}</div>
+            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6"><div className={`p-6 rounded-xl border shadow-sm ${darkMode ? "bg-[#1E293B] border-gray-700" : "bg-white border-gray-200"}`}><p className={`text-sm font-medium ${darkMode ? "text-gray-400" : "text-gray-500"}`}>Total</p><h3 className={`text-3xl font-bold mt-2 ${darkMode ? "text-gray-100" : "text-[#111827]"}`}>{total}</h3></div><div className={`p-6 rounded-xl border shadow-sm ${darkMode ? "bg-[#1E293B] border-gray-700" : "bg-white border-gray-200"}`}><p className={`text-sm font-medium ${darkMode ? "text-gray-400" : "text-gray-500"}`}>Present</p><h3 className="text-3xl font-bold mt-2 text-green-500">{present}</h3></div><div className={`p-6 rounded-xl border shadow-sm ${darkMode ? "bg-[#1E293B] border-gray-700" : "bg-white border-gray-200"}`}><p className={`text-sm font-medium ${darkMode ? "text-gray-400" : "text-gray-500"}`}>Absent</p><h3 className="text-3xl font-bold mt-2 text-red-500">{absent}</h3></div><div className={`p-6 rounded-xl border shadow-sm ${darkMode ? "bg-[#1E293B] border-gray-700" : "bg-white border-gray-200"}`}><p className={`text-sm font-medium ${darkMode ? "text-gray-400" : "text-gray-500"}`}>Attendance %</p><h3 className={`text-3xl font-bold mt-2 ${darkMode ? "text-gray-100" : "text-[#111827]"}`}>{percentage}%</h3></div></div>
+            <div className={`rounded-xl border shadow-sm ${darkMode ? "bg-[#1E293B] border-gray-700" : "bg-white border-gray-200"}`}><div className="p-6 border-b border-gray-200 dark:border-gray-700 flex flex-col md:flex-row items-center justify-between gap-4"><h3 className={`text-lg font-bold ${darkMode ? "text-gray-100" : "text-gray-800"}`}>Records</h3><div className="flex items-center gap-4 w-full md:w-auto"><div className="relative"><select value={selectedEvent} onChange={(e) => setSelectedEvent(e.target.value)} className={`appearance-none w-full md:w-64 px-4 py-2 pr-8 rounded-lg border outline-none focus:ring-2 focus:ring-blue-500 ${darkMode ? "bg-[#0F172A] border-gray-600 text-gray-200" : "bg-gray-50 border-gray-300 text-gray-700"}`}>{events.length > 0 ? (events.map(event => (<option key={event.id} value={event.id} className={darkMode ? "bg-slate-800" : ""}>{event.title}</option>))) : (<option>No Active Events</option>)}</select><ChevronDown className={`absolute right-3 top-3 pointer-events-none ${darkMode ? "text-gray-400" : "text-gray-500"}`} size={16} /></div><div className={`flex items-center gap-2 px-3 py-2 rounded-lg border w-full md:w-auto ${darkMode ? "bg-[#0F172A] border-gray-600" : "bg-gray-50 border-gray-300"}`}><Search size={18} className="text-gray-400" /><input type="text" placeholder="Search..." value={searchTerm} onChange={(e) => setSearchTerm(e.target.value)} className={`bg-transparent border-none outline-none w-full md:w-48 ${darkMode ? "text-gray-200 placeholder-gray-500" : "text-gray-800 placeholder-gray-400"}`} /></div></div></div><div className="overflow-x-auto"><table className="w-full text-left border-collapse"><thead><tr className={`border-b ${darkMode ? "border-gray-700" : "border-gray-200"}`}><th className={`p-4 font-medium text-sm ${darkMode ? "text-gray-400" : "text-gray-500"}`}>Name</th><th className={`p-4 font-medium text-sm ${darkMode ? "text-gray-400" : "text-gray-500"}`}>Roll No</th><th className={`p-4 font-medium text-sm ${darkMode ? "text-gray-400" : "text-gray-500"}`}>Time</th><th className={`p-4 font-medium text-sm ${darkMode ? "text-gray-400" : "text-gray-500"}`}>Status</th>{userRole === 'organizer' && <th className={`p-4 font-medium text-sm ${darkMode ? "text-gray-400" : "text-gray-500"}`}>Action</th>}</tr></thead><tbody>{filteredData.map((student) => (<tr key={student.id} className={`border-b last:border-0 ${darkMode ? "border-gray-700 hover:bg-[#0F172A]" : "border-gray-100 hover:bg-gray-50"} transition-colors`}><td className={`p-4 ${darkMode ? "text-gray-200" : "text-gray-800"}`}>{student.name}</td><td className={`p-4 ${darkMode ? "text-gray-400" : "text-gray-600"}`}>{student.rollNo}</td><td className={`p-4 ${darkMode ? "text-gray-400" : "text-gray-600"}`}>{student.time}</td><td className="p-4"><span className={`inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium ${student.status === "present" ? "bg-green-100 text-green-800 dark:bg-green-900/30 dark:text-green-400" : "bg-red-100 text-red-800 dark:bg-red-900/30 dark:text-red-400"}`}>{student.status === "present" ? <CheckCircle size={12} className="mr-1" /> : <XCircle size={12} className="mr-1" />}{student.status.charAt(0).toUpperCase() + student.status.slice(1)}</span></td>{userRole === 'organizer' && (<td className="p-4"><button onClick={() => toggleStatus(student.id)} className={`p-2 rounded-lg transition-colors ${student.status === 'present' ? 'text-red-500 hover:bg-red-50' : 'text-green-500 hover:bg-green-50'}`}>{student.status === 'present' ? <XCircle size={20} /> : <CheckCircle size={20} />}</button></td>)}</tr>))}</tbody></table></div></div>
         </div>
     );
 }

@@ -1,111 +1,31 @@
 import React, { useState } from 'react';
 import { Search, CheckCircle, XCircle, Filter, Eye, User } from 'lucide-react';
 
-// Now uses props instead of local state
 export function Registrations({ darkMode, userRole, userName, addNotification, registrations, setRegistrations }) {
-
     const [searchTerm, setSearchTerm] = useState("");
     const [filterStatus, setFilterStatus] = useState("all");
+    const safeRegistrations = registrations || [];
 
-    const filteredRegistrations = registrations.filter(reg => {
+    const filteredRegistrations = safeRegistrations.filter(reg => {
         const matchesRole = userRole === 'admin' ? true : reg.organizer === userName;
-        const matchesSearch = reg.student.toLowerCase().includes(searchTerm.toLowerCase());
+        const matchesSearch = (reg.student || "").toLowerCase().includes(searchTerm.toLowerCase()) || (reg.email || "").toLowerCase().includes(searchTerm.toLowerCase()) || (reg.event || "").toLowerCase().includes(searchTerm.toLowerCase());
         const matchesStatus = filterStatus === 'all' || reg.status === filterStatus;
         return matchesRole && matchesSearch && matchesStatus;
     });
 
     const handleStatusChange = (id, newStatus, studentName, eventName) => {
-        if (window.confirm(`Are you sure you want to ${newStatus} ${studentName}?`)) {
-            // Update Global List
-            setRegistrations(registrations.map(reg => reg.id === id ? { ...reg, status: newStatus } : reg));
-
-            // Send Notification Logic
-            if (newStatus === 'registered' || newStatus === 'approved') {
-                addNotification('Registration Approved', `Your request for ${eventName} has been approved!`, 'success');
-            } else if (newStatus === 'rejected') {
-                addNotification('Registration Rejected', `Your request for ${eventName} was rejected.`, 'alert');
-            }
+        if (window.confirm(`Are you sure?`)) {
+            setRegistrations(safeRegistrations.map(reg => reg.id === id ? { ...reg, status: newStatus } : reg));
+            if (newStatus === 'registered' || newStatus === 'approved') addNotification('Registration Approved', `Your request for ${eventName} has been approved!`, 'success');
+            else if (newStatus === 'rejected') addNotification('Registration Rejected', `Your request for ${eventName} was rejected.`, 'alert');
         }
     };
-
-    const getStatusColor = (status) => {
-        switch (status) {
-            case 'approved': case 'registered': return 'bg-green-100 text-green-700';
-            case 'rejected': return 'bg-red-100 text-red-700';
-            case 'pending': return 'bg-yellow-100 text-yellow-700';
-            default: return 'bg-gray-100 text-gray-700';
-        }
-    };
+    const getStatusColor = (status) => { switch (status) { case 'approved': case 'registered': return 'bg-green-100 text-green-700'; case 'rejected': return 'bg-red-100 text-red-700'; case 'pending': return 'bg-yellow-100 text-yellow-700'; default: return 'bg-gray-100 text-gray-700'; } };
 
     return (
         <div className="space-y-6">
-            {/* Header */}
-            <div className="flex flex-col md:flex-row md:items-center justify-between gap-4">
-                <div>
-                    <h2 className={`text-2xl font-bold ${darkMode ? 'text-gray-100' : 'text-[#111827]'}`}>
-                        {userRole === 'admin' ? 'All Registrations' : 'My Student Requests'}
-                    </h2>
-                    <p className={`${darkMode ? 'text-gray-400' : 'text-gray-500'}`}>
-                        {userRole === 'admin' ? 'Overview of all student sign-ups' : 'Approve or reject students for your events'}
-                    </p>
-                </div>
-                <div className="flex gap-3">
-                    <div className={`flex items-center gap-2 px-3 py-2 rounded-lg border ${darkMode ? 'bg-[#0F172A] border-gray-600' : 'bg-white border-gray-200'}`}>
-                        <Filter size={18} className="text-gray-400" />
-                        <select value={filterStatus} onChange={(e) => setFilterStatus(e.target.value)} className={`bg-transparent border-none outline-none text-sm cursor-pointer ${darkMode ? 'text-white' : 'text-gray-800'}`}>
-                            <option value="all" className={darkMode ? 'bg-slate-800' : ''}>All Status</option>
-                            <option value="pending" className={darkMode ? 'bg-slate-800' : ''}>Pending</option>
-                            <option value="registered" className={darkMode ? 'bg-slate-800' : ''}>Approved</option>
-                            <option value="rejected" className={darkMode ? 'bg-slate-800' : ''}>Rejected</option>
-                        </select>
-                    </div>
-                </div>
-            </div>
-
-            {/* Table Card */}
-            <div className={`rounded-xl border shadow-sm overflow-hidden ${darkMode ? 'bg-[#1E293B] border-gray-700' : 'bg-white border-gray-200'}`}>
-                <div className={`p-4 border-b flex items-center justify-between ${darkMode ? 'border-gray-700' : 'border-gray-100'}`}>
-                    <h3 className={`font-bold ${darkMode ? 'text-gray-100' : 'text-gray-800'}`}>Requests ({filteredRegistrations.length})</h3>
-                    <div className={`flex items-center gap-2 px-3 py-2 rounded-lg border ${darkMode ? 'bg-[#0F172A] border-gray-600' : 'bg-gray-50 border-gray-200'}`}>
-                        <Search size={18} className="text-gray-400" />
-                        <input type="text" placeholder="Search student..." value={searchTerm} onChange={(e) => setSearchTerm(e.target.value)} className={`bg-transparent border-none outline-none w-48 text-sm ${darkMode ? 'text-white placeholder-gray-500' : 'text-gray-800 placeholder-gray-400'}`} />
-                    </div>
-                </div>
-
-                <div className="overflow-x-auto">
-                    <table className="w-full text-left border-collapse">
-                        <thead>
-                            <tr className={`border-b ${darkMode ? 'border-gray-700' : 'border-gray-200'}`}>
-                                <th className={`p-4 font-medium text-sm ${darkMode ? 'text-gray-400' : 'text-gray-500'}`}>Student Name</th>
-                                <th className={`p-4 font-medium text-sm ${darkMode ? 'text-gray-400' : 'text-gray-500'}`}>Event</th>
-                                <th className={`p-4 font-medium text-sm ${darkMode ? 'text-gray-400' : 'text-gray-500'}`}>Organizer</th>
-                                <th className={`p-4 font-medium text-sm ${darkMode ? 'text-gray-400' : 'text-gray-500'}`}>Status</th>
-                                <th className={`p-4 font-medium text-sm ${darkMode ? 'text-gray-400' : 'text-gray-500'}`}>Actions</th>
-                            </tr>
-                        </thead>
-                        <tbody>
-                            {filteredRegistrations.map((reg) => (
-                                <tr key={reg.id} className={`border-b last:border-0 ${darkMode ? 'border-gray-700 hover:bg-[#0F172A]' : 'border-gray-100 hover:bg-gray-50'} transition-colors`}>
-                                    <td className="p-4"><p className={`font-medium ${darkMode ? 'text-gray-200' : 'text-gray-900'}`}>{reg.student}</p></td>
-                                    <td className={`p-4 ${darkMode ? 'text-gray-300' : 'text-gray-700'}`}>{reg.event}</td>
-                                    <td className={`p-4 text-sm ${darkMode ? 'text-gray-400' : 'text-gray-500'}`}><span className="flex items-center gap-1"><User size={12} /> {reg.organizer}</span></td>
-                                    <td className="p-4"><span className={`px-2.5 py-0.5 rounded-full text-xs font-medium capitalize ${getStatusColor(reg.status)}`}>{reg.status === 'registered' ? 'Approved' : reg.status}</span></td>
-                                    <td className="p-4">
-                                        <div className="flex gap-2">
-                                            {reg.status === 'pending' ? (
-                                                <>
-                                                    <button onClick={() => handleStatusChange(reg.id, 'registered', reg.student, reg.event)} className="p-1.5 rounded bg-green-100 text-green-600 hover:bg-green-200 transition"><CheckCircle size={18} /></button>
-                                                    <button onClick={() => handleStatusChange(reg.id, 'rejected', reg.student, reg.event)} className="p-1.5 rounded bg-red-100 text-red-600 hover:bg-red-200 transition"><XCircle size={18} /></button>
-                                                </>
-                                            ) : (<button className={`p-1.5 rounded cursor-default ${darkMode ? 'text-gray-600' : 'text-gray-300'}`}><Eye size={18} /></button>)}
-                                        </div>
-                                    </td>
-                                </tr>
-                            ))}
-                        </tbody>
-                    </table>
-                </div>
-            </div>
+            <div className="flex flex-col md:flex-row md:items-center justify-between gap-4"><div><h2 className={`text-2xl font-bold ${darkMode ? 'text-gray-100' : 'text-[#111827]'}`}>{userRole === 'admin' ? 'All Registrations' : 'My Student Requests'}</h2><p className={`${darkMode ? 'text-gray-400' : 'text-gray-500'}`}>{userRole === 'admin' ? 'Overview of all student sign-ups' : 'Approve or reject students for your events'}</p></div><div className="flex gap-3"><div className={`flex items-center gap-2 px-3 py-2 rounded-lg border ${darkMode ? 'bg-[#0F172A] border-gray-600' : 'bg-white border-gray-200'}`}><Filter size={18} className="text-gray-400" /><select value={filterStatus} onChange={(e) => setFilterStatus(e.target.value)} className={`bg-transparent border-none outline-none text-sm cursor-pointer ${darkMode ? 'text-white' : 'text-gray-800'}`}><option value="all" className={darkMode ? 'bg-slate-800' : ''}>All Status</option><option value="pending" className={darkMode ? 'bg-slate-800' : ''}>Pending</option><option value="registered" className={darkMode ? 'bg-slate-800' : ''}>Approved</option><option value="rejected" className={darkMode ? 'bg-slate-800' : ''}>Rejected</option></select></div></div></div>
+            <div className={`rounded-xl border shadow-sm overflow-hidden ${darkMode ? 'bg-[#1E293B] border-gray-700' : 'bg-white border-gray-200'}`}><div className={`p-4 border-b flex items-center justify-between ${darkMode ? 'border-gray-700' : 'border-gray-100'}`}><h3 className={`font-bold ${darkMode ? 'text-gray-100' : 'text-gray-800'}`}>Requests ({filteredRegistrations.length})</h3><div className={`flex items-center gap-2 px-3 py-2 rounded-lg border ${darkMode ? 'bg-[#0F172A] border-gray-600' : 'bg-gray-50 border-gray-200'}`}><Search size={18} className="text-gray-400" /><input type="text" placeholder="Search student..." value={searchTerm} onChange={(e) => setSearchTerm(e.target.value)} className={`bg-transparent border-none outline-none w-48 text-sm ${darkMode ? 'text-white placeholder-gray-500' : 'text-gray-800 placeholder-gray-400'}`} /></div></div><div className="overflow-x-auto"><table className="w-full text-left border-collapse"><thead><tr className={`border-b ${darkMode ? 'border-gray-700' : 'border-gray-200'}`}><th className={`p-4 font-medium text-sm ${darkMode ? 'text-gray-400' : 'text-gray-500'}`}>Student Name</th><th className={`p-4 font-medium text-sm ${darkMode ? 'text-gray-400' : 'text-gray-500'}`}>Event</th><th className={`p-4 font-medium text-sm ${darkMode ? 'text-gray-400' : 'text-gray-500'}`}>Organizer</th><th className={`p-4 font-medium text-sm ${darkMode ? 'text-gray-400' : 'text-gray-500'}`}>Status</th><th className={`p-4 font-medium text-sm ${darkMode ? 'text-gray-400' : 'text-gray-500'}`}>Actions</th></tr></thead><tbody>{filteredRegistrations.map((reg) => (<tr key={reg.id} className={`border-b last:border-0 ${darkMode ? 'border-gray-700 hover:bg-[#0F172A]' : 'border-gray-100 hover:bg-gray-50'} transition-colors`}><td className="p-4"><div><p className={`font-medium ${darkMode ? 'text-gray-200' : 'text-gray-900'}`}>{reg.student}</p><p className="text-xs text-gray-500">{reg.email}</p></div></td><td className={`p-4 ${darkMode ? 'text-gray-300' : 'text-gray-700'}`}>{reg.event}</td><td className={`p-4 text-sm ${darkMode ? 'text-gray-400' : 'text-gray-500'}`}><span className="flex items-center gap-1"><User size={12} /> {reg.organizer}</span></td><td className="p-4"><span className={`px-2.5 py-0.5 rounded-full text-xs font-medium capitalize ${getStatusColor(reg.status)}`}>{reg.status === 'registered' ? 'Approved' : reg.status}</span></td><td className="p-4"><div className="flex gap-2">{reg.status === 'pending' ? (<><button onClick={() => handleStatusChange(reg.id, 'registered', reg.student, reg.event)} className="p-1.5 rounded bg-green-100 text-green-600 hover:bg-green-200 transition"><CheckCircle size={18} /></button><button onClick={() => handleStatusChange(reg.id, 'rejected', reg.student, reg.event)} className="p-1.5 rounded bg-red-100 text-red-600 hover:bg-red-200 transition"><XCircle size={18} /></button></>) : (<button className={`p-1.5 rounded cursor-default ${darkMode ? 'text-gray-600' : 'text-gray-300'}`}><Eye size={18} /></button>)}</div></td></tr>))}</tbody></table></div></div>
         </div>
     );
 }

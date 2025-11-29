@@ -19,63 +19,25 @@ export default function Sidebar({ activeScreen, onNavigate, userRole, isOpen, on
 
     return (
         <>
-            {/* Mobile Overlay (Only visible when menu is open on small screens) */}
-            {isOpen && (
-                <div
-                    className="fixed inset-0 bg-black/50 z-30 md:hidden"
-                    onClick={onClose}
-                />
-            )}
-
-            {/* Sidebar Container */}
-            <div className={`
-                fixed inset-y-0 left-0 z-40 w-64 bg-[#1E293B] border-r border-slate-700 text-white 
-                transform transition-transform duration-300 ease-in-out
-                ${isOpen ? 'translate-x-0' : '-translate-x-full'} 
-                md:translate-x-0 
-            `}>
-                {/* Header & Close Button */}
+            {isOpen && <div className="fixed inset-0 bg-black/50 z-30 md:hidden" onClick={onClose} />}
+            <div className={`fixed inset-y-0 left-0 z-40 w-64 bg-[#1E293B] border-r border-slate-700 text-white transform transition-transform duration-300 ease-in-out ${isOpen ? 'translate-x-0' : '-translate-x-full'} md:translate-x-0`}>
                 <div className="h-16 flex items-center justify-between px-6 border-b border-slate-700">
                     <h1 className="text-xl font-bold tracking-wide">College Events</h1>
-                    <button
-                        onClick={onClose}
-                        className="md:hidden p-1 rounded hover:bg-slate-700 text-slate-400 hover:text-white"
-                    >
-                        <X size={20} />
-                    </button>
+                    <button onClick={onClose} className="md:hidden p-1 rounded hover:bg-slate-700 text-slate-400 hover:text-white"><X size={20} /></button>
                 </div>
-
-                {/* Navigation Links */}
                 <nav className="flex-1 px-3 py-4 space-y-1 overflow-y-auto">
                     {filteredNavItems.map((item) => {
                         const Icon = item.icon;
                         const isActive = activeScreen === item.id;
-
                         return (
-                            <button
-                                key={item.id}
-                                onClick={() => {
-                                    onNavigate(item.id);
-                                    onClose(); // Close sidebar on mobile when clicked
-                                }}
-                                className={`w-full flex items-center gap-3 px-4 py-3 rounded-lg transition-all duration-200 ${isActive
-                                        ? 'bg-[#3B82F6] text-white shadow-md shadow-blue-900/20'
-                                        : 'text-gray-400 hover:bg-[#334155] hover:text-white'
-                                    }`}
-                            >
+                            <button key={item.id} onClick={() => { onNavigate(item.id); onClose(); }} className={`w-full flex items-center gap-3 px-4 py-3 rounded-lg transition-all duration-200 ${isActive ? 'bg-[#3B82F6] text-white shadow-md shadow-blue-900/20' : 'text-gray-400 hover:bg-[#334155] hover:text-white'}`}>
                                 <Icon size={20} />
                                 <span className="font-medium">{item.label}</span>
                             </button>
                         );
                     })}
                 </nav>
-
-                {/* Footer */}
-                <div className="p-4 border-t border-slate-700">
-                    <div className="text-gray-500 text-xs font-medium text-center">
-                        v1.0.0 Beta
-                    </div>
-                </div>
+                <div className="p-4 border-t border-slate-700"><div className="text-gray-500 text-xs font-medium text-center">v1.0.0 Beta</div></div>
             </div>
         </>
     );

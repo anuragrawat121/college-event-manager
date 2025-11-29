@@ -1,5 +1,5 @@
 import React, { useState } from "react";
-import { Plus, Edit, Trash2, Search, X, Filter, Eye } from "lucide-react";
+import { Plus, Edit, Trash2, Search, X, Filter, Eye, Calendar, MapPin, User } from "lucide-react";
 
 export function EventManagement({ darkMode, userRole, userName, events, setEvents }) {
     const [isDialogOpen, setIsDialogOpen] = useState(false);

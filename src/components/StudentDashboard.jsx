@@ -1,17 +1,12 @@
 import React, { useState } from 'react';
 import { Calendar, MapPin, Clock, Users, CheckCircle, X, QrCode, Download, Clock as ClockIcon } from 'lucide-react';
 
-// 1. Receive 'events', 'registrations', 'setRegistrations' from App.jsx
 export function StudentDashboard({ darkMode, userName, events, registrations, setRegistrations }) {
-
   const [confirmingEvent, setConfirmingEvent] = useState(null);
   const [ticketEvent, setTicketEvent] = useState(null);
 
-  // 2. Filter "My Events" from the GLOBAL registrations list
-  // This ensures that if an Admin/Organizer updates the status, the Student sees it here immediately.
   const myEventsList = registrations.filter(r => r.student === userName);
 
-  // 3. Helper to check status of a specific event
   const getRegistrationStatus = (eventId) => {
     const reg = registrations.find(r => r.eventId === eventId && r.student === userName);
     return reg ? reg.status : null;
@@ -20,7 +15,6 @@ export function StudentDashboard({ darkMode, userName, events, registrations, se
   const handleConfirmRegister = () => {
     if (!confirmingEvent) return;
 
-    // Create new registration entry
     const newReg = {
       id: Date.now(),
       student: userName,
@@ -30,13 +24,11 @@ export function StudentDashboard({ darkMode, userName, events, registrations, se
       time: confirmingEvent.time,
       venue: confirmingEvent.venue,
       organizer: confirmingEvent.organizer,
-      status: 'pending', // Start as Pending
+      status: 'pending',
       email: `${userName.toLowerCase()}@student.edu`
     };
 
-    // Update GLOBAL state
     setRegistrations([...registrations, newReg]);
-
     setConfirmingEvent(null);
     alert("Registration Request Sent! Waiting for Organizer approval.");
   };
@@ -58,13 +50,10 @@ export function StudentDashboard({ darkMode, userName, events, registrations, se
 
   return (
     <div className="space-y-8 relative">
-      {/* Header */}
       <div>
         <h2 className={`text-3xl font-bold mb-2 ${darkMode ? 'text-gray-100' : 'text-[#111827]'}`}>Upcoming Events</h2>
         <p className={`${darkMode ? 'text-gray-400' : 'text-gray-500'}`}>Browse and register for campus activities</p>
       </div>
-
-      {/* Event Grid */}
       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
         {events.map((event) => {
           const status = getRegistrationStatus(event.id);
@@ -86,7 +75,6 @@ export function StudentDashboard({ darkMode, userName, events, registrations, se
                   <div className="flex items-center gap-3"><Users size={16} className="text-gray-400" /><span className={`text-sm ${darkMode ? 'text-gray-300' : 'text-gray-600'}`}>Limited Seats</span></div>
                 </div>
 
-                {/* Buttons based on status */}
                 {isRegistered ? (
                   <button disabled className="w-full bg-green-600 text-white font-medium py-2 rounded-lg flex items-center justify-center gap-2 cursor-default opacity-90">
                     <CheckCircle size={18} /> Registered
@@ -106,7 +94,6 @@ export function StudentDashboard({ darkMode, userName, events, registrations, se
         })}
       </div>
 
-      {/* My Events Section */}
       <div className={`rounded-xl border p-6 ${darkMode ? 'bg-[#1E293B] border-gray-700' : 'bg-white border-gray-200'}`}>
         <h3 className={`text-xl font-bold mb-6 ${darkMode ? 'text-gray-100' : 'text-gray-800'}`}>My Registered Events</h3>
         <div className="space-y-3">
@@ -119,14 +106,12 @@ export function StudentDashboard({ darkMode, userName, events, registrations, se
               <div className="flex items-center gap-3">
                 <span className={`px-3 py-1 rounded-full text-xs font-bold capitalize ${getStatusColor(reg.status)}`}>{reg.status}</span>
 
-                {/* Only show Ticket if Registered */}
-                {(reg.status === 'registered' || reg.status === 'approved' || reg.status === 'attended') && (
+                {(reg.status === 'registered' || reg.status === 'attended') && (
                   <button onClick={() => setTicketEvent(reg)} className="p-2 rounded-full hover:bg-gray-200 dark:hover:bg-gray-700 transition-colors text-blue-500" title="View Ticket">
                     <QrCode size={20} />
                   </button>
                 )}
 
-                {/* Show Pending Clock */}
                 {reg.status === 'pending' && (
                   <div className="p-2 text-yellow-500" title="Waiting for Approval"><ClockIcon size={20} /></div>
                 )}
@@ -138,7 +123,6 @@ export function StudentDashboard({ darkMode, userName, events, registrations, se
         </div>
       </div>
 
-      {/* Confirm Modal */}
       {confirmingEvent && (
         <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/50 backdrop-blur-sm p-4">
           <div className={`w-full max-w-sm rounded-2xl shadow-2xl p-6 ${darkMode ? "bg-[#1E293B] text-white" : "bg-white text-slate-900"}`}>
@@ -152,7 +136,6 @@ export function StudentDashboard({ darkMode, userName, events, registrations, se
         </div>
       )}
 
-      {/* Ticket Modal */}
       {ticketEvent && (
         <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/60 backdrop-blur-sm p-4">
           <div className="bg-white w-full max-w-sm rounded-3xl overflow-hidden shadow-2xl relative">
@@ -169,7 +152,7 @@ export function StudentDashboard({ darkMode, userName, events, registrations, se
               <div className="bg-white p-4 rounded-xl border-2 border-dashed border-slate-300 mb-6">
                 <QrCode size={120} className="text-slate-900" />
               </div>
-              <p className="text-xs text-slate-400 text-center mb-6">Scan at venue entrance.<br />Ref: #{ticketEvent.id}</p>
+              <p className="text-xs text-slate-400 text-center mb-6">Scan at venue.<br />Ref: #{ticketEvent.id}</p>
               <button className="w-full bg-slate-900 text-white py-3 rounded-xl font-bold flex items-center justify-center gap-2 hover:bg-slate-800 transition">
                 <Download size={18} /> Download Ticket
               </button>
