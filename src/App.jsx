@@ -1,35 +1,41 @@
-import { useState, useEffect } from 'react';
+import { useState, useEffect } from "react";
 // Import the API helper
-import { api } from './utils/api';
+import { api } from "./utils/api";
 
 // Pages
-import Login from './pages/Login';
-import ForgotPassword from './pages/ForgotPassword';
-import PlaceholderPage from './pages/PlaceholderPage';
+import Login from "./pages/Login";
+import ForgotPassword from "./pages/ForgotPassword";
+import PlaceholderPage from "./pages/PlaceholderPage";
 
 // Components
-import Sidebar from './components/Sidebar';
-import Header from './components/Header';
-import { AdminDashboard } from './components/AdminDashboard';
-import { StudentDashboard } from './components/StudentDashboard';
-import { OrganizerDashboard } from './components/OrganizerDashboard';
-import { Attendance } from './components/Attendance';
-import { EventManagement } from './components/EventManagement';
-import { Reports } from './components/Reports';
-import { Feedback } from './components/Feedback';
-import { UserManagement } from './components/UserManagement';
-import { Registrations } from './components/Registrations';
-import { Notifications } from './components/Notifications';
-import { Settings } from './components/Settings';
-import { CalendarView } from './components/CalendarView';
-import { Profile } from './components/Profile';
+import Sidebar from "./components/Sidebar";
+import Header from "./components/Header";
+import { AdminDashboard } from "./components/AdminDashboard";
+import { StudentDashboard } from "./components/StudentDashboard";
+import { OrganizerDashboard } from "./components/OrganizerDashboard";
+import { Attendance } from "./components/Attendance";
+import { EventManagement } from "./components/EventManagement";
+import { Reports } from "./components/Reports";
+import { Feedback } from "./components/Feedback";
+import { UserManagement } from "./components/UserManagement";
+import { Registrations } from "./components/Registrations";
+import { Notifications } from "./components/Notifications";
+import { Settings } from "./components/Settings";
+import { CalendarView } from "./components/CalendarView";
+import { Profile } from "./components/Profile";
 
 export default function App() {
-  const [isLoggedIn, setIsLoggedIn] = useState(false);
-  const [showForgotPassword, setShowForgotPassword] = useState(false);
-  const [userRole, setUserRole] = useState('');
-  const [userName, setUserName] = useState('');
-  const [activeScreen, setActiveScreen] = useState('dashboard');
+  // Initialize state from localStorage if available
+  const [isLoggedIn, setIsLoggedIn] = useState(
+    () => localStorage.getItem("isLoggedIn") === "true",
+  );
+  const [userRole, setUserRole] = useState(
+    () => localStorage.getItem("userRole") || "",
+  );
+  const [userName, setUserName] = useState(
+    () => localStorage.getItem("userName") || "",
+  );
+  const [activeScreen, setActiveScreen] = useState("dashboard");
   const [darkMode, setDarkMode] = useState(false);
   const [isSidebarOpen, setSidebarOpen] = useState(false);
 
@@ -42,46 +48,61 @@ export default function App() {
   useEffect(() => {
     if (isLoggedIn) {
       // Fetch Events from Backend
-      api.getEvents()
-        .then(data => {
+      api
+        .getEvents()
+        .then((data) => {
           console.log("Events loaded from DB:", data);
           // Add UI properties if missing (like color)
-          const formattedEvents = data.map(e => ({
+          const formattedEvents = data.map((e) => ({
             ...e,
-            color: e.color || 'bg-blue-500'
+            color: e.color || "bg-blue-500",
           }));
           setGlobalEvents(formattedEvents);
         })
-        .catch(err => console.error("Failed to load events:", err));
+        .catch((err) => console.error("Failed to load events:", err));
 
       // In a real app, we'd also fetch registrations here
       // Fetch Registrations
-      api.getRegistrations()
-        .then(data => {
+      api
+        .getRegistrations()
+        .then((data) => {
           console.log("Registrations loaded:", data);
           setGlobalRegistrations(data);
         })
-        .catch(err => console.error("Failed to load registrations:", err));
+        .catch((err) => console.error("Failed to load registrations:", err));
     }
   }, [isLoggedIn]); // Re-run when user logs in
 
-  const addNotification = (title, message, type = 'info') => {
-    const newNotif = { id: Date.now(), title, message, type, date: 'Just now', read: false };
+  const addNotification = (title, message, type = "info") => {
+    const newNotif = {
+      id: Date.now(),
+      title,
+      message,
+      type,
+      date: "Just now",
+      read: false,
+    };
     setGlobalNotifications([newNotif, ...globalNotifications]);
   };
 
   const handleLogin = (userData) => {
+    localStorage.setItem("isLoggedIn", "true");
+    localStorage.setItem("userRole", userData.role);
+    localStorage.setItem("userName", userData.name);
     setUserRole(userData.role);
     setUserName(userData.name);
     setIsLoggedIn(true);
-    setActiveScreen('dashboard');
+    setActiveScreen("dashboard");
   };
 
   const handleLogout = () => {
+    localStorage.removeItem("isLoggedIn");
+    localStorage.removeItem("userRole");
+    localStorage.removeItem("userName");
     setIsLoggedIn(false);
-    setUserRole('');
-    setUserName('');
-    setActiveScreen('dashboard');
+    setUserRole("");
+    setUserName("");
+    setActiveScreen("dashboard");
     setGlobalEvents([]); // Clear data
   };
 
@@ -95,63 +116,194 @@ export default function App() {
   };
 
   // --- Render Logic ---
-  if (showForgotPassword) return <ForgotPassword onBackToLogin={() => setShowForgotPassword(false)} />;
-  if (!isLoggedIn) return <Login onLogin={handleLogin} onForgotPassword={() => setShowForgotPassword(true)} />;
+  if (showForgotPassword)
+    return (
+      <ForgotPassword onBackToLogin={() => setShowForgotPassword(false)} />
+    );
+  if (!isLoggedIn)
+    return (
+      <Login
+        onLogin={handleLogin}
+        onForgotPassword={() => setShowForgotPassword(true)}
+      />
+    );
 
   const renderContent = () => {
     const commonProps = { darkMode, userRole, userName };
-    const regProps = { registrations: globalRegistrations, setRegistrations: setGlobalRegistrations, addNotification };
+    const regProps = {
+      registrations: globalRegistrations,
+      setRegistrations: setGlobalRegistrations,
+      addNotification,
+    };
 
-    if (userRole === 'student') {
+    if (userRole === "student") {
       switch (activeScreen) {
-        case 'dashboard': return <StudentDashboard {...commonProps} events={globalEvents} registrations={globalRegistrations} setRegistrations={setGlobalRegistrations} />;
-        case 'calendar': return <CalendarView darkMode={darkMode} events={globalEvents} />;
-        case 'feedback': return <Feedback darkMode={darkMode} userRole={userRole} />;
-        case 'notifications': return <Notifications darkMode={darkMode} userRole={userRole} notifications={globalNotifications} setNotifications={setGlobalNotifications} addNotification={addNotification} />;
-        case 'settings': return <Settings darkMode={darkMode} toggleDarkMode={toggleDarkMode} />;
-        case 'profile': return <Profile darkMode={darkMode} user={{ name: userName, role: userRole }} />;
-        default: return <StudentDashboard {...commonProps} events={globalEvents} registrations={globalRegistrations} setRegistrations={setGlobalRegistrations} />;
+        case "dashboard":
+          return (
+            <StudentDashboard
+              {...commonProps}
+              events={globalEvents}
+              registrations={globalRegistrations}
+              setRegistrations={setGlobalRegistrations}
+            />
+          );
+        case "calendar":
+          return <CalendarView darkMode={darkMode} events={globalEvents} />;
+        case "feedback":
+          return <Feedback darkMode={darkMode} userRole={userRole} />;
+        case "notifications":
+          return (
+            <Notifications
+              darkMode={darkMode}
+              userRole={userRole}
+              notifications={globalNotifications}
+              setNotifications={setGlobalNotifications}
+              addNotification={addNotification}
+            />
+          );
+        case "settings":
+          return (
+            <Settings darkMode={darkMode} toggleDarkMode={toggleDarkMode} />
+          );
+        case "profile":
+          return (
+            <Profile
+              darkMode={darkMode}
+              user={{ name: userName, role: userRole }}
+            />
+          );
+        default:
+          return (
+            <StudentDashboard
+              {...commonProps}
+              events={globalEvents}
+              registrations={globalRegistrations}
+              setRegistrations={setGlobalRegistrations}
+            />
+          );
       }
     }
 
-    if (userRole === 'organizer') {
+    if (userRole === "organizer") {
       switch (activeScreen) {
-        case 'dashboard': return <OrganizerDashboard {...commonProps} onNavigate={handleNavigate} events={globalEvents} />;
-        case 'events': return <EventManagement {...commonProps} events={globalEvents} setEvents={setGlobalEvents} />;
-        case 'attendance': return <Attendance {...commonProps} events={globalEvents} />;
-        case 'reports': return <Reports {...commonProps} />;
-        case 'calendar': return <CalendarView darkMode={darkMode} events={globalEvents} />;
-        case 'registrations': return <Registrations {...commonProps} {...regProps} />;
-        case 'notifications': return <Notifications {...commonProps} notifications={globalNotifications} setNotifications={setGlobalNotifications} addNotification={addNotification} />;
-        case 'feedback': return <Feedback {...commonProps} />;
-        case 'settings': return <Settings {...commonProps} toggleDarkMode={toggleDarkMode} />;
-        case 'profile': return <Profile {...commonProps} user={{ name: userName, role: userRole }} />;
-        default: return <OrganizerDashboard {...commonProps} onNavigate={handleNavigate} />;
+        case "dashboard":
+          return (
+            <OrganizerDashboard
+              {...commonProps}
+              onNavigate={handleNavigate}
+              events={globalEvents}
+            />
+          );
+        case "events":
+          return (
+            <EventManagement
+              {...commonProps}
+              events={globalEvents}
+              setEvents={setGlobalEvents}
+            />
+          );
+        case "attendance":
+          return <Attendance {...commonProps} events={globalEvents} />;
+        case "reports":
+          return <Reports {...commonProps} />;
+        case "calendar":
+          return <CalendarView darkMode={darkMode} events={globalEvents} />;
+        case "registrations":
+          return <Registrations {...commonProps} {...regProps} />;
+        case "notifications":
+          return (
+            <Notifications
+              {...commonProps}
+              notifications={globalNotifications}
+              setNotifications={setGlobalNotifications}
+              addNotification={addNotification}
+            />
+          );
+        case "feedback":
+          return <Feedback {...commonProps} />;
+        case "settings":
+          return <Settings {...commonProps} toggleDarkMode={toggleDarkMode} />;
+        case "profile":
+          return (
+            <Profile
+              {...commonProps}
+              user={{ name: userName, role: userRole }}
+            />
+          );
+        default:
+          return (
+            <OrganizerDashboard {...commonProps} onNavigate={handleNavigate} />
+          );
       }
     }
 
     switch (activeScreen) {
-      case 'dashboard': return <AdminDashboard {...commonProps} />;
-      case 'calendar': return <CalendarView darkMode={darkMode} events={globalEvents} />;
-      case 'events': return <EventManagement {...commonProps} events={globalEvents} setEvents={setGlobalEvents} />;
-      case 'attendance': return <Attendance {...commonProps} events={globalEvents} />;
-      case 'reports': return <Reports {...commonProps} />;
-      case 'feedback': return <Feedback {...commonProps} />;
-      case 'users': return <UserManagement {...commonProps} />;
-      case 'registrations': return <Registrations {...commonProps} {...regProps} />;
-      case 'notifications': return <Notifications {...commonProps} notifications={globalNotifications} setNotifications={setGlobalNotifications} addNotification={addNotification} />;
-      case 'settings': return <Settings {...commonProps} toggleDarkMode={toggleDarkMode} />;
-      case 'profile': return <Profile {...commonProps} user={{ name: userName, role: userRole }} />;
-      default: return <AdminDashboard {...commonProps} />;
+      case "dashboard":
+        return <AdminDashboard {...commonProps} />;
+      case "calendar":
+        return <CalendarView darkMode={darkMode} events={globalEvents} />;
+      case "events":
+        return (
+          <EventManagement
+            {...commonProps}
+            events={globalEvents}
+            setEvents={setGlobalEvents}
+          />
+        );
+      case "attendance":
+        return <Attendance {...commonProps} events={globalEvents} />;
+      case "reports":
+        return <Reports {...commonProps} />;
+      case "feedback":
+        return <Feedback {...commonProps} />;
+      case "users":
+        return <UserManagement {...commonProps} />;
+      case "registrations":
+        return <Registrations {...commonProps} {...regProps} />;
+      case "notifications":
+        return (
+          <Notifications
+            {...commonProps}
+            notifications={globalNotifications}
+            setNotifications={setGlobalNotifications}
+            addNotification={addNotification}
+          />
+        );
+      case "settings":
+        return <Settings {...commonProps} toggleDarkMode={toggleDarkMode} />;
+      case "profile":
+        return (
+          <Profile {...commonProps} user={{ name: userName, role: userRole }} />
+        );
+      default:
+        return <AdminDashboard {...commonProps} />;
     }
   };
 
   return (
-    <div className={`flex h-screen transition-colors duration-200 ${darkMode ? 'bg-[#0F172A]' : 'bg-[#F7F8FA]'}`}>
-      <Sidebar activeScreen={activeScreen} onNavigate={handleNavigate} userRole={userRole} isOpen={isSidebarOpen} onClose={() => setSidebarOpen(false)} />
+    <div
+      className={`flex h-screen transition-colors duration-200 ${darkMode ? "bg-[#0F172A]" : "bg-[#F7F8FA]"}`}
+    >
+      <Sidebar
+        activeScreen={activeScreen}
+        onNavigate={handleNavigate}
+        userRole={userRole}
+        isOpen={isSidebarOpen}
+        onClose={() => setSidebarOpen(false)}
+      />
       <div className="flex-1 flex flex-col overflow-hidden md:ml-64 w-full">
-        <Header darkMode={darkMode} onToggleDarkMode={toggleDarkMode} onLogout={handleLogout} onNavigate={handleNavigate} userName={userName} userRole={userRole} onMenuClick={() => setSidebarOpen(!isSidebarOpen)} />
-        <main className="flex-1 overflow-y-auto p-4 md:p-8">{renderContent()}</main>
+        <Header
+          darkMode={darkMode}
+          onToggleDarkMode={toggleDarkMode}
+          onLogout={handleLogout}
+          onNavigate={handleNavigate}
+          userName={userName}
+          userRole={userRole}
+          onMenuClick={() => setSidebarOpen(!isSidebarOpen)}
+        />
+        <main className="flex-1 overflow-y-auto p-4 md:p-8">
+          {renderContent()}
+        </main>
       </div>
     </div>
   );
