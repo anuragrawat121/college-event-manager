@@ -35,6 +35,7 @@ export default function App() {
   const [userName, setUserName] = useState(
     () => localStorage.getItem("userName") || "",
   );
+  const [showForgotPassword, setShowForgotPassword] = useState(false);
   const [activeScreen, setActiveScreen] = useState("dashboard");
   const [darkMode, setDarkMode] = useState(false);
   const [isSidebarOpen, setSidebarOpen] = useState(false);
