@@ -1,4 +1,4 @@
-const API_URL = 'http://localhost:5000';
+const API_URL = import.meta.env.VITE_API_URL || 'http://localhost:5000';
 
 export const api = {
     // 1. Get all events from Database
@@ -30,13 +30,21 @@ export const api = {
 
     // 4. Login Check
     login: async (email, password) => {
-        const res = await fetch(`${API_URL}/login`, {
-            method: 'POST',
-            headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify({ email, password }),
-        });
-        if (!res.ok) throw new Error('Login failed');
-        return res.json();
+        try {
+            const res = await fetch(`${API_URL}/login`, {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ email, password }),
+            });
+            if (!res.ok) {
+                const errorData = await res.json().catch(() => ({}));
+                throw new Error(errorData.error || 'Login failed');
+            }
+            return res.json();
+        } catch (error) {
+            console.error("Login API Error:", error);
+            throw error;
+        }
     },
 
     // 5. Register Student for Event
@@ -46,6 +54,12 @@ export const api = {
             headers: { 'Content-Type': 'application/json' },
             body: JSON.stringify(registrationData),
         });
+        return res.json();
+    },
+
+    // 6. Get All Registrations
+    getRegistrations: async () => {
+        const res = await fetch(`${API_URL}/registrations`);
         return res.json();
     }
 };

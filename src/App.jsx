@@ -55,7 +55,13 @@ export default function App() {
         .catch(err => console.error("Failed to load events:", err));
 
       // In a real app, we'd also fetch registrations here
-      // api.getRegistrations().then(setGlobalRegistrations);
+      // Fetch Registrations
+      api.getRegistrations()
+        .then(data => {
+          console.log("Registrations loaded:", data);
+          setGlobalRegistrations(data);
+        })
+        .catch(err => console.error("Failed to load registrations:", err));
     }
   }, [isLoggedIn]); // Re-run when user logs in
 
@@ -110,7 +116,7 @@ export default function App() {
 
     if (userRole === 'organizer') {
       switch (activeScreen) {
-        case 'dashboard': return <OrganizerDashboard {...commonProps} onNavigate={handleNavigate} />;
+        case 'dashboard': return <OrganizerDashboard {...commonProps} onNavigate={handleNavigate} events={globalEvents} />;
         case 'events': return <EventManagement {...commonProps} events={globalEvents} setEvents={setGlobalEvents} />;
         case 'attendance': return <Attendance {...commonProps} events={globalEvents} />;
         case 'reports': return <Reports {...commonProps} />;
